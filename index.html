@@ -176,6 +176,8 @@ textarea{resize:vertical}
 .rng{display:block;margin-top:14px}
 .rng span{display:block;font-size:13px;color:var(--muted);margin-bottom:2px}
 input[type=range]{padding:0;border:0;background:transparent;accent-color:var(--accent)}
+.photo .mount.tapmode{outline:3px solid var(--accent);outline-offset:2px}
+.photo img.tapping{cursor:crosshair}
 .sw{display:flex;flex-wrap:wrap;gap:10px}
 .sw button{width:36px;height:36px;border-radius:50%;border:1px solid rgba(0,0,0,.28);cursor:pointer;padding:0}
 .sw button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--ink)}
@@ -315,6 +317,7 @@ var SLOTS=[
   {k:'tilbehor',l:'Smykker og tilbehør',cats:['belte','tilbehor','smykker']}
 ];
 /* rows shown under every occasion on the Mangler tab, in this order */
+var MEXCL={hverdag:['blazer'],fest:['blazer'],fritid:['blazer','smykker']}; /* rows left out unless they already hold garments */
 var MROWS=[
   {k:'yttertoy',cats:['yttertoy']},{k:'blazer',cats:['blazer']},{k:'skjorte',cats:['skjorte']},
   {k:'topp',cats:['topp']},{k:'genser',cats:['genser']},{k:'bukse',cats:['bukse']},
@@ -461,7 +464,8 @@ function fileToDataURL(file,max){
 }
 
 /* cream background: only the background connected to the photo's edge is replaced */
-function cleanBg(d,w,h,tol){
+function cleanBg(d,w,h,tol,opts){
+  opts=opts||{};
   var rs=[],gs=[],bs=[],X,Y;
   function add(i){rs.push(d[i]);gs.push(d[i+1]);bs.push(d[i+2])}
   for(X=0;X<w;X++){add(X*4);add(((h-1)*w+X)*4)}
@@ -469,7 +473,7 @@ function cleanBg(d,w,h,tol){
   function med(a){a.sort(function(p,q){return p-q});return a[a.length>>1]}
   var br=med(rs),bg=med(gs),bb=med(bs),t2=tol*tol;
   function dist2(i){var dr=d[i]-br,dg=d[i+1]-bg,db=d[i+2]-bb;return dr*dr+dg*dg+db*db}
-  var mask=new Uint8Array(w*h),stack=new Int32Array(w*h),sp=0,count=0;
+  var N=w*h,mask=new Uint8Array(N),stack=new Int32Array(N),sp=0,count=0;
   function push(p){if(!mask[p]&&dist2(p*4)<=t2){mask[p]=1;stack[sp++]=p;count++}}
   for(X=0;X<w;X++){push(X);push((h-1)*w+X)}
   for(Y=0;Y<h;Y++){push(Y*w);push(Y*w+w-1)}
@@ -477,22 +481,56 @@ function cleanBg(d,w,h,tol){
     var p=stack[--sp],px=p%w,py=(p-px)/w;
     if(px>0)push(p-1);if(px<w-1)push(p+1);if(py>0)push(p-w);if(py<h-1)push(p+w);
   }
-  var coverage=count/(w*h);
+  var coverage=count/N;
   if(coverage<0.02)return coverage;
+
+  /* closed areas of background (for example between straps) */
+  if(opts.holes){
+    var minArea=Math.max(250,Math.round(N*0.0006)),seen=new Uint8Array(N),comp=new Int32Array(N);
+    for(var s0=0;s0<N;s0++){
+      if(mask[s0]||seen[s0]||dist2(s0*4)>t2)continue;
+      var cn=0,cp=0;comp[cn++]=s0;seen[s0]=1;
+      while(cp<cn){
+        var c0=comp[cp++],cx=c0%w,cy=(c0-cx)/w,nb=[];
+        if(cx>0)nb.push(c0-1);if(cx<w-1)nb.push(c0+1);if(cy>0)nb.push(c0-w);if(cy<h-1)nb.push(c0+w);
+        for(var k=0;k<nb.length;k++){var n=nb[k];if(!mask[n]&&!seen[n]&&dist2(n*4)<=t2){seen[n]=1;comp[cn++]=n}}
+      }
+      if(cn>=minArea){for(var z=0;z<cn;z++)mask[comp[z]]=1;count+=cn}
+    }
+  }
+
+  /* areas the user tapped: filled regardless of size, matched to the colour that was tapped */
+  (opts.seeds||[]).forEach(function(sd){
+    var sx=Math.max(0,Math.min(w-1,Math.round(sd[0]*(w-1)))),sy=Math.max(0,Math.min(h-1,Math.round(sd[1]*(h-1))));
+    var p0=sy*w+sx;if(mask[p0])return;
+    var r0=d[p0*4],g0=d[p0*4+1],b0=d[p0*4+2],seen2=new Uint8Array(N),st=[p0];seen2[p0]=1;
+    while(st.length){
+      var q=st.pop();mask[q]=1;count++;
+      var qx=q%w,qy=(q-qx)/w,nb2=[];
+      if(qx>0)nb2.push(q-1);if(qx<w-1)nb2.push(q+1);if(qy>0)nb2.push(q-w);if(qy<h-1)nb2.push(q+w);
+      for(var j=0;j<nb2.length;j++){
+        var m=nb2[j];if(mask[m]||seen2[m])continue;
+        var dr=d[m*4]-r0,dg=d[m*4+1]-g0,db=d[m*4+2]-b0;
+        if(dr*dr+dg*dg+db*db<=t2){seen2[m]=1;st.push(m)}
+      }
+    }
+  });
+  coverage=count/N;
+
   var CR=237,CG=226,CB=200,edge=[];
-  for(var q=0;q<w*h;q++){
-    if(mask[q])continue;
-    var qx=q%w,qy=(q-qx)/w;
-    if((qx>0&&mask[q-1])||(qx<w-1&&mask[q+1])||(qy>0&&mask[q-w])||(qy<h-1&&mask[q+w]))edge.push(q);
+  for(var q2=0;q2<N;q2++){
+    if(mask[q2])continue;
+    var qx2=q2%w,qy2=(q2-qx2)/w;
+    if((qx2>0&&mask[q2-1])||(qx2<w-1&&mask[q2+1])||(qy2>0&&mask[q2-w])||(qy2<h-1&&mask[q2+w]))edge.push(q2);
   }
   for(var e=0;e<edge.length;e++){
     var i=edge[e]*4,dist=Math.sqrt(dist2(i)),a=Math.max(0,Math.min(1,(dist-tol)/tol));
     d[i]=Math.round(CR*(1-a)+d[i]*a);d[i+1]=Math.round(CG*(1-a)+d[i+1]*a);d[i+2]=Math.round(CB*(1-a)+d[i+2]*a);
   }
-  for(var m=0;m<w*h;m++){if(mask[m]){var k=m*4;d[k]=CR;d[k+1]=CG;d[k+2]=CB}}
+  for(var m2=0;m2<N;m2++){if(mask[m2]){var kk=m2*4;d[kk]=CR;d[kk+1]=CG;d[kk+2]=CB}}
   return coverage;
 }
-function creamBg(dataUrl,tol){
+function creamBg(dataUrl,tol,opts){
   return new Promise(function(res,rej){
     var im=new Image();
     im.onerror=function(){rej(new Error('img'))};
@@ -500,7 +538,7 @@ function creamBg(dataUrl,tol){
       var w=im.width,h=im.height,c=document.createElement('canvas');
       c.width=w;c.height=h;
       var x=c.getContext('2d');x.drawImage(im,0,0);
-      var id=x.getImageData(0,0,w,h),cov=cleanBg(id.data,w,h,tol);
+      var id=x.getImageData(0,0,w,h),cov=cleanBg(id.data,w,h,tol,opts);
       if(cov<0.02){res('none');return}
       if(cov>0.93){res('toomuch');return}
       x.putImageData(id,0,0);
@@ -510,18 +548,20 @@ function creamBg(dataUrl,tol){
   });
 }
 var bgToken=0,bgTimer=null;
+function bgOpts(){return {holes:S.edit.holes!==false,seeds:S.edit.seeds||[]}}
+async function reprocessBg(){
+  var e=S.edit;if(!e||e.bg!=='krem'||!e.imgOrig)return;
+  var my=++bgToken;
+  try{
+    var r=await creamBg(e.imgOrig,e.tol,bgOpts());
+    if(my!==bgToken||S.edit!==e)return;
+    var out=(r==='none'||r==='toomuch')?e.imgOrig:r;
+    e.img=out;var im=document.querySelector('.photo .mount img');if(im)im.src=out;
+  }catch(err){}
+}
 function scheduleBg(){
   clearTimeout(bgTimer);
-  bgTimer=setTimeout(async function(){
-    if(!S.edit||S.edit.bg!=='krem'||!S.edit.imgOrig)return;
-    var my=++bgToken;
-    try{
-      var r=await creamBg(S.edit.imgOrig,S.edit.tol);
-      if(my!==bgToken||!S.edit)return;
-      var out=(r==='none'||r==='toomuch')?S.edit.imgOrig:r;
-      S.edit.img=out;var im=document.querySelector('.photo .mount img');if(im)im.src=out;
-    }catch(e){}
-  },140);
+  bgTimer=setTimeout(reprocessBg,140);
 }
 
 /* ---------- views ---------- */
@@ -620,6 +660,7 @@ function viewMangler(){
         .sort(function(a,b){return String(a.name).localeCompare(String(b.name),'nb')});
       return {r:r,id:id,w:w,items:items,label:r.label||catL(r.k),skipped:!!(w&&w.kind==='skip')};
     });
+    rows=rows.filter(function(r){return !(MEXCL[o.k]&&MEXCL[o.k].indexOf(r.r.k)>-1&&!r.items.length)});
     var act=rows.filter(function(r){return !r.skipped}),have=act.filter(function(r){return r.items.length}).length;
     h+='<section class="occ"><h2 class="grp"><button class="occ-h" data-act="toggleOcc" data-v="'+o.k+'" aria-expanded="'+open+'">'+esc(o.l)+'<span class="chev'+(open?' open':'')+'">'+CHEV+'</span></button></h2>'+
       '<div class="stitch" aria-hidden="true">'+act.map(function(r){return '<i class="'+(r.items.length?'on':'')+'"></i>'}).join('')+'</div>'+
@@ -687,7 +728,7 @@ function render(){
 function editHTML(){
   var e=S.edit,isNew=!e.id;
   var photo=e.img
-    ? '<div class="photo"><div class="mount"><img src="'+e.img+'" alt="Bilde av plagget"></div></div><button class="sm swap" data-act="pickFile">Bytt bilde</button>'
+    ? '<div class="photo"><div class="mount'+(e.tapMode?' tapmode':'')+'"><img src="'+e.img+'" alt="Bilde av plagget"'+(e.tapMode?' data-act="photoTap" class="tapping"':'')+'></div></div><button class="sm swap" data-act="pickFile">Bytt bilde</button>'
     : '<label class="photo photo-empty" for="file"><span><b>Legg til bilde</b>Ta et bilde eller velg fra biblioteket</span></label>';
   var sw=sortedColors().map(function(c){
     return '<button style="background:'+esc(c.hex)+'" data-act="setColor" data-v="'+esc(c.k)+'" aria-pressed="'+(e.color===c.k)+'" aria-label="'+esc(c.l)+'" title="'+esc(c.l)+'"></button>';
@@ -710,7 +751,11 @@ function editHTML(){
       '<button class="chip" data-act="bgSet" data-v="orig" aria-pressed="'+(e.bg!=='krem')+'">Original</button>'+
       '<button class="chip" data-act="bgSet" data-v="krem" aria-pressed="'+(e.bg==='krem')+'">Krem</button></div>'+
       (e.bg==='krem'?'<label class="rng"><span>Følsomhet</span><input type="range" min="8" max="70" value="'+(e.tol||28)+'" data-f="tol" aria-label="Følsomhet for bakgrunn"></label>'+
-      '<p class="hint">Bare bakgrunnen som henger sammen med bildekanten byttes ut, og plaggets farger røres ikke. Øk følsomheten hvis det er hvite rester rundt plagget. Senk den hvis plagget selv blir spist opp, for eksempel et hvitt plagg på hvit bunn.</p>':'')+
+      '<div class="chips wrap-chips" style="margin-top:10px">'+
+        '<button class="chip" data-act="bgHoles" aria-pressed="'+(e.holes!==false)+'">Fyll lukkede områder</button>'+
+        '<button class="chip" data-act="bgTap" aria-pressed="'+(!!e.tapMode)+'">Trykk for å fylle</button>'+
+        ((e.seeds||[]).length?'<button class="chip" data-act="bgUndoSeed">Angre siste fylling</button>':'')+'</div>'+
+      '<p class="hint">'+(e.tapMode?'Trykk på delen av bakgrunnen som ikke ble krem. Du kan trykke flere ganger, og trykke på «Trykk for å fylle» igjen når du er ferdig.':'Bakgrunnen som henger sammen med bildekanten byttes ut, og plaggets farger røres ikke. «Fyll lukkede områder» tar også bitene som er innrammet av for eksempel stropper. Øk følsomheten hvis det er hvite rester, og senk den hvis plagget selv blir spist opp.')+'</p>':'')+
       '</div>':'')+
     '<label class="fld"><span>Navn</span><input data-f="name" value="'+esc(e.name)+'" placeholder="f.eks. Marineblå ullblazer" autocomplete="off"></label>'+
     '<label class="fld"><span>Type</span><select data-f="cat">'+opts+'</select></label>'+
@@ -862,8 +907,8 @@ function openEdit(id,preset){
   var it=id?byId(id):null;
   preset=preset||{};
   S.edit=it?Object.assign({},it,{tags:it.tags.slice(),seasons:(it.seasons||[]).slice()}):
-    {id:null,name:'',cat:preset.cat||'blazer',color:preset.color||'',tags:preset.tag?[preset.tag]:[],seasons:[],brand:'',year:'',materials:'',wash:'',care:'',note:'',img:'',imgOrig:'',bg:'orig',tol:28};
-  if(it){S.edit.bg=it.imgOrig?'krem':'orig';S.edit.tol=it.tol||28;S.edit.imgOrig=it.imgOrig||''}
+    {id:null,name:'',cat:preset.cat||'blazer',color:preset.color||'',tags:preset.tag?[preset.tag]:[],seasons:[],brand:'',year:'',materials:'',wash:'',care:'',note:'',img:'',imgOrig:'',bg:'orig',tol:28,holes:true,seeds:[],tapMode:false};
+  if(it){S.edit.bg=it.imgOrig?'krem':'orig';S.edit.tol=it.tol||28;S.edit.imgOrig=it.imgOrig||'';S.edit.holes=it.bgHoles!==false;S.edit.seeds=(it.bgSeeds||[]).map(function(q){return q.slice()});S.edit.tapMode=false}
   S.confirmDel=false;S.sheet='edit';renderSheet(false);
 }
 
@@ -934,6 +979,19 @@ var H={
     if(!S.confirmDel){S.confirmDel=true;renderSheet(true);return}
     applyImport('replace');
   },
+  bgHoles:function(){S.edit.holes=!(S.edit.holes!==false);renderSheet(true);reprocessBg()},
+  bgTap:function(){S.edit.tapMode=!S.edit.tapMode;renderSheet(true)},
+  bgUndoSeed:function(){S.edit.seeds.pop();renderSheet(true);reprocessBg()},
+  photoTap:function(d,ev){
+    var e=S.edit;if(!e||!e.tapMode||!ev)return;
+    var im=ev.target,r=im.getBoundingClientRect(),nw=im.naturalWidth,nh=im.naturalHeight;
+    if(!nw||!nh||!r.width)return;
+    var sc=Math.min(r.width/nw,r.height/nh),dw=nw*sc,dh=nh*sc,ox=r.left+(r.width-dw)/2,oy=r.top+(r.height-dh)/2;
+    var u=(ev.clientX-ox)/dw,v=(ev.clientY-oy)/dh;
+    if(u<0||u>1||v<0||v>1)return;
+    e.seeds=(e.seeds||[]).concat([[+u.toFixed(4),+v.toFixed(4)]]);
+    renderSheet(true);reprocessBg();
+  },
   bgSet:async function(d){
     var e=S.edit;if(!e||!e.img)return;
     if(d.v==='krem'){
@@ -941,14 +999,14 @@ var H={
       if(fresh)e.imgOrig=e.img;
       if(!e.tol)e.tol=28;
       try{
-        var r=await creamBg(e.imgOrig,e.tol);
+        var r=await creamBg(e.imgOrig,e.tol,bgOpts());
         if(r==='none'){if(fresh)e.imgOrig='';e.bg='orig';renderSheet(true);toast('Fant ingen jevn bakgrunn langs kanten å bytte ut');return}
         e.bg='krem';
         if(r==='toomuch'){e.img=e.imgOrig;toast('Plagget ligner for mye på bakgrunnen. Senk følsomheten.')}
         else e.img=r;
       }catch(err){if(fresh)e.imgOrig='';toast('Kunne ikke behandle bildet');return}
     }else{
-      e.bg='orig';if(e.imgOrig)e.img=e.imgOrig;
+      e.bg='orig';e.tapMode=false;if(e.imgOrig)e.img=e.imgOrig;
     }
     renderSheet(true);
   },
@@ -991,7 +1049,7 @@ var H={
   toggleTag:function(d){var t=S.edit.tags,i=t.indexOf(d.v);if(i>-1)t.splice(i,1);else t.push(d.v);renderSheet(true)},
   saveItem:async function(){
     var e=S.edit;
-    var obj={id:e.id||uid(),name:(e.name||'').trim()||catL(e.cat),cat:e.cat,color:e.color,tags:e.tags.slice(),seasons:(e.seasons||[]).slice(),brand:(e.brand||'').trim(),year:String(e.year||'').replace(/\D/g,'').slice(0,4),materials:(e.materials||'').trim(),wash:(e.wash||'').trim(),care:(e.care||'').trim(),note:e.note||'',img:e.img||'',imgOrig:(e.bg==='krem'&&e.imgOrig)?e.imgOrig:'',tol:e.tol||28,created:e.created||Date.now()};
+    var obj={id:e.id||uid(),name:(e.name||'').trim()||catL(e.cat),cat:e.cat,color:e.color,tags:e.tags.slice(),seasons:(e.seasons||[]).slice(),brand:(e.brand||'').trim(),year:String(e.year||'').replace(/\D/g,'').slice(0,4),materials:(e.materials||'').trim(),wash:(e.wash||'').trim(),care:(e.care||'').trim(),note:e.note||'',img:e.img||'',imgOrig:(e.bg==='krem'&&e.imgOrig)?e.imgOrig:'',tol:e.tol||28,bgHoles:e.holes!==false,bgSeeds:(e.bg==='krem'?(e.seeds||[]):[]),created:e.created||Date.now()};
     var idx=S.items.findIndex(function(i){return i.id===obj.id});
     if(idx>-1)S.items[idx]=obj;else S.items.push(obj);
     closeSheet();render();
@@ -1074,7 +1132,7 @@ var H={
 
 document.addEventListener('click',function(e){
   var b=e.target.closest('[data-act]');if(!b)return;
-  var f=H[b.dataset.act];if(f)f(b.dataset);
+  var f=H[b.dataset.act];if(f)f(b.dataset,e);
 });
 document.addEventListener('input',function(e){
   var f=e.target.dataset&&e.target.dataset.f;if(!f)return;
@@ -1098,7 +1156,7 @@ document.addEventListener('change',async function(e){
     return;
   }
   if(e.target.id!=='file'||!e.target.files||!e.target.files[0])return;
-  try{S.edit.img=await fileToDataURL(e.target.files[0],800);S.edit.imgOrig='';S.edit.bg='orig';renderSheet(true)}
+  try{S.edit.img=await fileToDataURL(e.target.files[0],800);S.edit.imgOrig='';S.edit.bg='orig';S.edit.seeds=[];S.edit.tapMode=false;renderSheet(true)}
   catch(err){toast('Kunne ikke lese bildet. Prøv et JPEG- eller PNG-bilde.')}
 });
 document.addEventListener('keydown',function(e){
