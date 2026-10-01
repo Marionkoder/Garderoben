@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="0" fill="#F7EFDA"/>
+  <g transform="translate(256 256) scale(1.14) translate(-256 -256)">
+  <g transform="translate(0.5,-13.0)">
+  <!-- blazer -->
+  <path fill="#A50F2D" stroke="#A50F2D" stroke-width="6" stroke-linejoin="round" d="M233.4 140.7 226.5 143.6 203.6 161.4 164.6 169.5 156.8 175.8 135.3 271.4 126.2 296.9 128.7 317.8 125.6 327.1 128.4 347.9 134.8 352.2 167.4 351.6 175.6 339.9 167.4 417.4 168.6 444.5 174.9 453.1 194.3 458.0 227.3 459.8 293.4 459.4 319.8 456.7 336.8 450.5 341.9 438.2 340.9 388.3 333.2 318.9 341.0 347.3 344.0 351.1 358.2 352.9 371.7 351.7 380.5 349.2 384.1 344.3 384.2 317.0 380.6 305.7 386.0 289.6 374.4 257.2 354.6 175.6 349.5 170.4 301.6 157.9 280.1 141.8 266.1 140.0Z"/>
+  <path fill="#5E0F26" d="M226.1 151.2 285.6 151.2 266.0 349.6 262.3 455.2 255.2 455.2 248.4 351.2Z"/>
+  <defs><clipPath id="op"><path d="M226.1 120.8 285.6 120.8 266.0 349.6 262.3 455.2 255.2 455.2 248.4 351.2Z"/></clipPath></defs>
+  <!-- hanger: the neck rises smoothly into the hook; arms and bar are seen through the open front -->
+  <path d="M256 143.0V123.2C256 114.2 243.4 112.4 243.4 103.4V99.8A21.6 21.6 0 0 1 285.9 94.2" fill="none" stroke="#D90429" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path clip-path="url(#op)" d="M166 188L256 143L346 188M186 186H326" fill="none" stroke="#D90429" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+  <path fill="#A50F2D" d="M225.1 143.2 195.2 195.0 205.7 200.8 248.4 351.2 226.1 151.2Z"/>
+  <path fill="#A50F2D" d="M286.9 143.2 316.8 195.0 306.3 200.8 263.6 351.2 285.9 151.2Z"/>
+  <g fill="none" stroke="#5E0F26" stroke-width="3.8" stroke-linecap="round" stroke-linejoin="round">
+    <!-- lapel roll lines and notches -->
+    <path d="M195.2 195.0L205.7 200.8L248.4 351.2"/>
+    <path d="M316.8 195.0L306.3 200.8L263.6 351.2"/>
+    <!-- armhole seams -->
+    <path d="M164.3 180.0Q181.3 236.0 176.4 344.8"/>
+    <path d="M347.7 180.0Q330.7 236.0 343.5 344.8"/>
+    <!-- pockets -->
+    <path d="M177.4 371.7L206.2 371.7"/>
+    <path d="M334.6 371.7L305.8 371.7"/>
+    <!-- ruched sleeves -->
+    <path d="M164.3 314.4q7.9 3.8 13.6 0.6"/>
+    <path d="M163.8 327.2q7.9 3.8 13.1 0.6"/>
+    <path d="M347.7 314.4q-7.9 3.8 -13.6 0.6"/>
+    <path d="M348.2 327.2q-7.9 3.8 -13.1 0.6"/>
+  </g>
+  </g>
+  </g>
+</svg>

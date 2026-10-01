@@ -1,0 +1,1090 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Garderoben</title>
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#F7EFDA" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#2A0E17" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Garderoben">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Nunito:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F7EFDA; --surface:#FCF8EB; --ink:#4A1423; --head:#7B1431; --muted:#82525B; --line:#DFD0B0;
+  --accent:#D90429; --accent-ink:#FFFFFF; --burg:#7B1431; --burg-ink:#F7EFDA;
+  --mount:#EDE2C8; --panel:#6B1230; --chalk:#F7EFDA;
+  --display:'Fraunces',Georgia,'Times New Roman',serif;
+  --body:'Nunito',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  color-scheme:light dark;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#2A0E17; --surface:#37131F; --ink:#F6EEDB; --head:#F6EEDB; --muted:#CDAAAD; --line:#5A2937;
+    --accent:#FF5468; --accent-ink:#2A0A12; --burg:#8E1B3C;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#2A0E17; --surface:#37131F; --ink:#F6EEDB; --head:#F6EEDB; --muted:#CDAAAD; --line:#5A2937;
+  --accent:#FF5468; --accent-ink:#2A0A12; --burg:#8E1B3C;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.45 var(--body);-webkit-font-tap-highlight-color:transparent}
+button{font-family:inherit}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+.wrap{max-width:720px;margin:0 auto;padding:22px 16px 130px}
+h1{font:600 36px/1.05 var(--display);color:var(--head);letter-spacing:-.01em;margin:0}
+.sub{color:var(--muted);font-size:14px;margin:6px 0 0}
+h2{margin:0}
+.grp{font:600 24px/1.15 var(--display);color:var(--head);margin:30px 0 0}
+.grp2{font:600 18px/1.2 var(--display);color:var(--head);margin:24px 0 0}
+.hint{color:var(--muted);font-size:13px;margin:6px 0 0}
+.lead{color:var(--muted);font-size:14.5px;margin:14px 0 0}
+.warn{background:var(--surface);border:1px solid var(--accent);border-radius:8px;padding:10px 12px;font-size:14px;margin:14px 0 0}
+.foot{color:var(--muted);font-size:13px;margin-top:34px}
+
+/* chips */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 0 10px;scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.chips.wrap-chips{flex-wrap:wrap;overflow:visible}
+.chip{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:7px 14px;font:500 14px var(--body);cursor:pointer;white-space:nowrap}
+.chip[aria-pressed="true"]{background:var(--burg);color:var(--burg-ink);border-color:var(--burg)}
+.filters{margin-top:18px}
+.filters .chips{padding-bottom:6px}
+
+/* buttons */
+.btn{background:var(--accent);color:var(--accent-ink);border:0;border-radius:999px;padding:12px 20px;font:600 15px var(--body);cursor:pointer}
+.btn.ghost{background:transparent;color:var(--ink);border:1px solid var(--line)}
+.btn.danger{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.sm{border:1px solid var(--line);background:transparent;color:var(--ink);border-radius:999px;padding:6px 12px;font:500 13px var(--body);cursor:pointer}
+.sm[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.sm.danger{color:var(--accent);border-color:var(--accent)}
+.row{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.fab{position:fixed;right:16px;bottom:calc(72px + env(safe-area-inset-bottom,0px));display:flex;gap:8px;align-items:center;padding:13px 20px 13px 16px;box-shadow:0 6px 18px rgba(0,0,0,.28);z-index:15}
+.fab[hidden]{display:none}
+
+/* garment grid */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:20px 12px;margin-top:12px}
+.item{background:none;border:0;padding:0;text-align:left;color:inherit;font:inherit;cursor:pointer;display:block;width:100%}
+.item:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
+.item .nm{display:block;margin-top:8px;font-weight:600;font-size:15px;line-height:1.25}
+.meta{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;margin-top:2px}
+.dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(0,0,0,.28);display:inline-block;flex:none}
+.tg{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
+
+/* photo mounts */
+.mount{position:relative;background:var(--mount);aspect-ratio:4/5;display:grid;place-items:center;overflow:hidden;border-radius:6px;width:100%}
+.mount img{position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block}
+.mount.ph{text-align:center;padding:8px;font-size:13px;font-weight:600}
+
+.empty{margin-top:40px;padding:28px 4px}
+.empty h2{font:600 27px/1.15 var(--display);color:var(--head)}
+.empty p{color:var(--muted);max-width:44ch}
+
+/* outfit panel */
+.panel{margin-top:6px;border-radius:10px;padding:14px;background-color:var(--panel);
+  background-image:repeating-linear-gradient(90deg,rgba(247,239,218,.09) 0 1px,transparent 1px 15px);
+  display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:8px}
+.slot{position:relative;aspect-ratio:1/1.1;border:1.5px dashed rgba(247,239,218,.6);border-radius:6px;background:transparent;color:var(--chalk);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:500 12.5px/1.25 var(--body);text-align:center;padding:6px;cursor:pointer;overflow:hidden}
+.slot.tall{grid-row:span 2;aspect-ratio:auto;align-self:stretch;min-height:0}
+.slot.coat{grid-row:1/4;aspect-ratio:auto;align-self:stretch;min-height:0}
+.slot.filled{border:1.5px solid var(--chalk);padding:0;background:var(--mount);display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0}
+.slot.filled .mount{flex:1 1 0;min-height:0;aspect-ratio:auto;border-radius:0;width:100%}
+.slot .nm{flex:none;width:100%;padding:5px 8px;background:rgba(70,8,28,.9);color:var(--chalk);font-size:12px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.panel-actions{display:flex;gap:8px;margin-top:12px}
+
+.fld{display:block;margin:16px 0 0}
+.fld>span,.lbl{display:block;font-size:14px;font-weight:600;margin-bottom:6px}
+input,select,textarea{width:100%;font:400 16px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 12px}
+textarea{resize:vertical}
+
+.ol{list-style:none;margin:12px 0 0;padding:0}
+.of{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
+.strip{display:flex;gap:4px;grid-column:1/-1}
+.th{width:46px;flex:none}
+.th .mount{border-radius:3px;padding:0}
+.th .ph span{display:none}
+.oi strong{display:block;font-size:15.5px}
+.oa{display:flex;gap:6px}
+
+/* gaps */
+.stitch{display:flex;gap:4px;margin:10px 0 6px}
+.stitch i{flex:1;height:3px;border-radius:2px;background:var(--line)}
+.stitch i.on{background:var(--accent)}
+.prog{color:var(--muted);font-size:13px;margin:0}
+.ess-list{list-style:none;margin:8px 0 0;padding:0}
+.ess{display:grid;grid-template-columns:26px 1fr;gap:10px;padding:13px 0;border-bottom:1px solid var(--line)}
+.ess svg{margin-top:1px}
+.el{font-weight:500}
+.el.muted{color:var(--muted)}
+.strike{text-decoration:line-through}
+.ra{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.ef{display:flex;align-items:center;gap:8px;margin-top:6px;font-size:13px;color:var(--muted)}
+.ef .mount{width:34px;border-radius:3px;padding:0}
+.ef .ph span{display:none}
+.wl{list-style:none;margin:10px 0 0;padding:0}
+.wl li{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--line)}
+.x{background:none;border:0;color:var(--muted);cursor:pointer;padding:6px;border-radius:50%;display:grid;place-items:center}
+.addrow{display:flex;gap:8px;margin-top:14px}
+.addrow input{flex:1}
+
+/* tab bar */
+.tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:20}
+.tabs button{flex:1;background:none;border:0;color:var(--muted);padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;font:500 12px var(--body);cursor:pointer}
+.tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
+
+/* sheet */
+.scrim{position:fixed;inset:0;background:rgba(36,6,14,.55);z-index:30}
+.sheet{position:fixed;left:0;right:0;bottom:0;max-width:600px;margin:0 auto;max-height:92%;overflow:auto;background:var(--surface);border-radius:18px 18px 0 0;
+  padding:18px 16px calc(22px + env(safe-area-inset-bottom,0px));z-index:31;outline:none}
+.sheet.enter{animation:up .22s ease-out}
+@keyframes up{from{transform:translateY(28px);opacity:0}to{transform:none;opacity:1}}
+.sheet-h{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.sheet-h h2{font:600 24px/1.15 var(--display);color:var(--head)}
+.photo{width:100%;max-width:240px;margin:16px auto 0;display:block}
+.photo-empty{aspect-ratio:4/5;border:1.5px dashed var(--muted);border-radius:8px;display:grid;place-items:center;text-align:center;color:var(--muted);cursor:pointer;padding:18px;font-size:14px}
+.photo-empty b{display:block;color:var(--ink);font-size:15px;margin-bottom:4px}
+.tip{color:var(--muted);font-size:13px;text-align:center;margin:8px auto 0;max-width:34ch}
+.swap{display:block;margin:10px auto 0}
+.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+.rng{display:block;margin-top:14px}
+.rng span{display:block;font-size:13px;color:var(--muted);margin-bottom:2px}
+input[type=range]{padding:0;border:0;background:transparent;accent-color:var(--accent)}
+.sw{display:flex;flex-wrap:wrap;gap:10px}
+.sw button{width:36px;height:36px;border-radius:50%;border:1px solid rgba(0,0,0,.28);cursor:pointer;padding:0}
+.sw button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--ink)}
+.sw .other{background:repeating-linear-gradient(45deg,#b4b6ba 0 5px,#e3e4e6 5px 10px)}
+.pickgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px 10px;margin-top:16px}
+.pick{background:none;border:0;padding:0;text-align:left;color:inherit;font:inherit;cursor:pointer}
+.pick .mount{border:2px solid transparent}
+.pick[aria-pressed="true"] .mount{border-color:var(--accent)}
+.pick .pn{display:block;margin-top:5px;font-size:13px;font-weight:500;line-height:1.25}
+
+/* backup */
+.backup{margin-top:36px;padding-top:4px;border-top:1px solid var(--line)}
+.backup .hint{margin:8px 0 0}
+
+/* palette */
+.pal{display:grid;grid-template-columns:repeat(auto-fill,minmax(104px,1fr));gap:18px 12px;margin-top:18px}
+.chipc{background:none;border:0;padding:0;text-align:left;color:inherit;font:inherit;cursor:pointer;display:block;width:100%}
+.chipc:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
+.chipc .cc{display:block;aspect-ratio:1/1.15;border-radius:6px;border:1px solid rgba(0,0,0,.22)}
+.chipc .cn{display:block;margin-top:7px;font-weight:600;font-size:14.5px;line-height:1.25}
+.chipc .cm{display:block;color:var(--muted);font-size:12.5px}
+.chipc.add .cc{border:1.5px dashed var(--muted);display:grid;place-items:center;color:var(--muted)}
+.sw .add{background:transparent;border:1.5px dashed var(--muted);color:var(--muted);display:grid;place-items:center}
+.cbig{height:96px;border-radius:8px;border:1px solid rgba(0,0,0,.22);margin-top:16px}
+.hexrow{display:flex;gap:10px;align-items:center}
+.hexrow input[type=color]{width:56px;height:46px;padding:3px;flex:none;cursor:pointer}
+.hexrow input[type=text]{flex:1}
+
+#toast{position:fixed;left:50%;bottom:calc(76px + env(safe-area-inset-bottom,0px));transform:translate(-50%,10px);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:999px;font-size:14px;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s;z-index:40;max-width:90%;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+
+@media (prefers-reduced-motion:reduce){
+  .sheet.enter{animation:none}
+  #toast{transition:none}
+}
+@media (min-width:600px){
+  .wrap{padding-top:34px}
+  .pickgrid{grid-template-columns:repeat(4,1fr)}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Garderoben</h1>
+    <p class="sub" id="count"></p>
+    <div id="warn"></div>
+  </header>
+  <main id="view"></main>
+</div>
+
+<button class="btn fab" id="fab" data-act="newItem" hidden>
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>
+  Nytt plagg
+</button>
+
+<nav class="tabs" aria-label="Hovedmeny">
+  <button data-act="tab" data-v="plagg">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 8V7a2 2 0 1 0-2-2"/><path d="M12 8 3.5 14.2A1 1 0 0 0 4.1 16h15.8a1 1 0 0 0 .6-1.8L12 8z"/></svg>
+    Plagg
+  </button>
+  <button data-act="tab" data-v="antrekk">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="7" height="8" rx="1"/><rect x="13" y="3" width="7" height="5" rx="1"/><rect x="13" y="10" width="7" height="11" rx="1"/><rect x="4" y="13" width="7" height="8" rx="1"/></svg>
+    Antrekk
+  </button>
+  <button data-act="tab" data-v="mangler">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 6h10M10 12h10M10 18h10"/><path d="m3.5 6 1.2 1.2L6.8 5M3.5 12l1.2 1.2L6.8 11M3.5 18l1.2 1.2L6.8 17"/></svg>
+    Mangler
+  </button>
+  <button data-act="tab" data-v="palett">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16a5 5 0 0 0 5-5c0-3.9-4-7.2-9-7.2z"/><circle cx="7.5" cy="11" r="1" fill="currentColor"/><circle cx="10.5" cy="7" r="1" fill="currentColor"/><circle cx="15" cy="7.5" r="1" fill="currentColor"/></svg>
+    Palett
+  </button>
+</nav>
+
+<div id="sheetRoot"></div>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ---------- data ---------- */
+var CATS=[
+  {k:'blazer',l:'Blazer / jakke'},{k:'skjorte',l:'Skjorte / bluse'},{k:'genser',l:'Genser'},{k:'topp',l:'Topp / t-skjorte'},
+  {k:'bukse',l:'Bukse / skjørt'},{k:'kjole',l:'Kjole / buksedress'},
+{k:'sko',l:'Sko'},{k:'belte',l:'Belte'},
+  {k:'yttertoy',l:'Yttertøy'},{k:'tilbehor',l:'Tilbehør'}
+];
+var OCCS=[{k:'formelt',l:'Formelt'},{k:'hoytidelig',l:'Høytidelig'},{k:'hverdag',l:'Hverdag'}];
+var DEFAULT_COLORS=[
+  {k:'svart',l:'Svart',hex:'#1b1c1f',g:'svart'},
+  {k:'hvit',l:'Hvit',hex:'#f7f7f4',g:'hvit'},
+  {k:'himmelblaa',l:'Himmelblå',hex:'#87ceeb',g:'bla'}
+];
+var SEASONS=[{k:'helars',l:'Helårs'},{k:'sommer',l:'Sommer'},{k:'vinter',l:'Vinter'},{k:'varhost',l:'Vår/høst'}];
+var GROUPS=[
+  {k:'hvit',l:'Hvit og krem'},{k:'gul',l:'Gul'},{k:'oransje',l:'Oransje'},{k:'rod',l:'Rød og burgunder'},
+  {k:'rosa',l:'Rosa'},{k:'lilla',l:'Lilla'},{k:'bla',l:'Blå'},{k:'gronn',l:'Grønn'},
+  {k:'brun',l:'Brun og beige'},{k:'gra',l:'Grå'},{k:'svart',l:'Svart'}
+];
+function hsl(hex){
+  var h6=normHex(hex)||'#888888',r=parseInt(h6.substr(1,2),16)/255,g=parseInt(h6.substr(3,2),16)/255,b=parseInt(h6.substr(5,2),16)/255;
+  var mx=Math.max(r,g,b),mn=Math.min(r,g,b),l=(mx+mn)/2,d=mx-mn,s=d===0?0:d/(1-Math.abs(2*l-1)),h=0;
+  if(d!==0){
+    if(mx===r)h=((g-b)/d)%6;else if(mx===g)h=(b-r)/d+2;else h=(r-g)/d+4;
+    h=h*60;if(h<0)h+=360;
+  }
+  return {h:h,s:s,l:l};
+}
+function groupOf(hex){
+  var c=hsl(hex),h=c.h,s=c.s,l=c.l;
+  if(l<=0.13)return 'svart';
+  if(s<0.12)return l>=0.88?'hvit':'gra';
+  if(l>=0.84&&h>=25&&h<=70)return 'hvit';
+  if(h<15||h>=345)return l>=0.72?'rosa':'rod';
+  if(h<45)return (l<0.42||s<0.35)?'brun':'oransje';
+  if(h<70)return (l<0.38||s<0.35)?'brun':'gul';
+  if(h<165)return 'gronn';
+  if(h<255)return 'bla';
+  if(h<320)return 'lilla';
+  return 'rosa';
+}
+function cg(c){return c.g||groupOf(c.hex)}
+function gIndex(k){for(var i=0;i<GROUPS.length;i++)if(GROUPS[i].k===k)return i;return GROUPS.length}
+function sortedColors(){
+  return S.colors.slice().sort(function(a,b){
+    return gIndex(cg(a))-gIndex(cg(b))||hsl(b.hex).l-hsl(a.hex).l||String(a.l).localeCompare(String(b.l),'nb');
+  });
+}
+var SLOTS=[
+  {k:'yttertoy',l:'Yttertøy',cats:['yttertoy'],coat:true},
+  {k:'jakke',l:'Blazer eller jakke',cats:['blazer']},
+  {k:'overdel',l:'Skjorte, genser eller topp',cats:['skjorte','genser','topp']},
+  {k:'underdel',l:'Bukse, skjørt eller kjole',cats:['bukse','kjole'],tall:true},
+  {k:'sko',l:'Sko',cats:['sko']},
+  {k:'tilbehor',l:'Belte og tilbehør',cats:['belte','tilbehor']}
+];
+var ESS=[
+  {k:'formelt',l:'Formelt',items:[
+    {k:'kjole',l:'Kjole eller buksedress',cats:['kjole']},
+    {k:'blazer',l:'Blazer eller jakke',cats:['blazer']},
+    {k:'skjorte',l:'Skjorte eller bluse',cats:['skjorte']},
+    {k:'genser',l:'Genser',cats:['genser']},
+    {k:'bukse',l:'Bukse eller skjørt',cats:['bukse']},
+    {k:'sko',l:'Lærsko',cats:['sko']},
+    {k:'belte',l:'Belte',cats:['belte']},
+    {k:'frakk',l:'Frakk eller kåpe',cats:['yttertoy']}
+  ]},
+  {k:'hoytidelig',l:'Høytidelig',items:[
+    {k:'drakt',l:'Kjole eller buksedress',cats:['kjole']},
+    {k:'skjorte',l:'Pen skjorte eller bluse',cats:['skjorte']},
+    {k:'sko',l:'Pene sko',cats:['sko']},
+    {k:'tilb',l:'Lommetørkle, smykker eller veske',cats:['tilbehor']},
+    {k:'aften',l:'Aftenfrakk eller kåpe',cats:['yttertoy']}
+  ]}
+];
+
+var S={tab:'plagg',items:[],outfits:[],wish:[],colors:[],fOcc:'alle',fCat:'alle',fSeason:'alle',occ:'formelt',
+  cur:{},curName:'',curId:null,storage:true,sheet:null,edit:null,picker:null,confirmDel:false,confirmOutfit:null,customText:'',
+  cdraft:null,colorFrom:null,editScroll:0,lastBackup:'',importData:null};
+
+/* ---------- helpers ---------- */
+function $(s){return document.querySelector(s)}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7)}
+function catL(k){var c=CATS.filter(function(x){return x.k===k})[0];return c?c.l:''}
+function seasonL(k){var o=SEASONS.filter(function(x){return x.k===k})[0];return o?o.l:''}
+function occL(k){var o=OCCS.filter(function(x){return x.k===k})[0];return o?o.l:''}
+function colObj(k){return S.colors.filter(function(x){return x.k===k})[0]||{k:'',l:'Ingen farge',hex:'#c9ccd2',none:true}}
+function normHex(v){v=String(v||'').trim();if(v[0]!=='#')v='#'+v;if(/^#[0-9a-f]{3}$/i.test(v))v='#'+v[1]+v[1]+v[2]+v[2]+v[3]+v[3];return /^#[0-9a-f]{6}$/i.test(v)?v.toLowerCase():null}
+function isDark(hex){var h=normHex(hex)||'#ffffff',r=parseInt(h.substr(1,2),16),g=parseInt(h.substr(3,2),16),b=parseInt(h.substr(5,2),16);return (0.299*r+0.587*g+0.114*b)<140}
+function byId(id){return S.items.filter(function(i){return i.id===id})[0]}
+function toast(m){var t=$('#toast');t.textContent=m;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(function(){t.classList.remove('on')},2400)}
+
+var PLUS='<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+var CHECK='<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="10" fill="var(--accent)"/><path d="m7.5 12.5 3 3 6-6.5" fill="none" stroke="var(--accent-ink)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+var OPEN='<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="3 3"/></svg>';
+var CLOSE='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
+
+function mount(i){
+  if(i.img) return '<div class="mount"><img src="'+i.img+'" alt="'+esc(i.name)+'"></div>';
+  var c=colObj(i.color);
+  return '<div class="mount ph" style="background:'+c.hex+';color:'+(isDark(c.hex)?'#f3f3f0':'#1c2533')+'"><span>'+esc(catL(i.cat))+'</span></div>';
+}
+
+/* ---------- storage (IndexedDB) ---------- */
+var db=null;
+function openDB(){
+  return new Promise(function(res){
+    try{
+      var r=indexedDB.open('formell-garderobe',2);
+      r.onupgradeneeded=function(){var d=r.result;['items','outfits','wish','meta'].forEach(function(n){if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:'id'})})};
+      r.onsuccess=function(){db=r.result;res(true)};
+      r.onerror=function(){res(false)};
+      r.onblocked=function(){res(false)};
+      setTimeout(function(){res(false)},4000);
+    }catch(e){res(false)}
+  });
+}
+function tx(store,mode,fn){
+  return new Promise(function(res,rej){
+    try{
+      var t=db.transaction(store,mode),rq=fn(t.objectStore(store));
+      t.oncomplete=function(){res(rq&&rq.result)};
+      t.onerror=function(){rej(t.error)};
+      t.onabort=function(){rej(t.error)};
+    }catch(e){rej(e)}
+  });
+}
+function dbAll(s){return tx(s,'readonly',function(st){return st.getAll()})}
+function dbPut(s,o){return tx(s,'readwrite',function(st){return st.put(o)})}
+function dbDel(s,id){return tx(s,'readwrite',function(st){return st.delete(id)})}
+function dbPutMany(s,arr){return tx(s,'readwrite',function(st){arr.forEach(function(o){st.put(o)})})}
+function dbClear(s){return tx(s,'readwrite',function(st){return st.clear()})}
+async function save(store,obj){
+  if(!db) return true;
+  try{await dbPut(store,obj);return true}
+  catch(e){toast('Kunne ikke lagre. Det kan være for lite plass på enheten.');return false}
+}
+async function del(store,id){ if(!db) return; try{await dbDel(store,id)}catch(e){} }
+function savePalette(){return save('meta',{id:'palette',colors:S.colors})}
+
+var OLD_OCC={forretning:'formelt',selskap:'hoytidelig',blacktie:'hoytidelig'};
+function mapOcc(list){var out=[];(list||[]).forEach(function(t){var n=OLD_OCC[t]||t;if(out.indexOf(n)<0)out.push(n)});return out}
+async function migrate(meta,allMeta){
+  if(meta&&meta.colors){S.colors=meta.colors}
+  else{S.colors=DEFAULT_COLORS.map(function(c){return Object.assign({},c)});await savePalette()}
+  var gch=false;
+  S.colors.forEach(function(c){if(!c.g){c.g=groupOf(c.hex);gch=true}});
+  if(gch)await savePalette();
+  if(!(allMeta||[]).some(function(m){return m.id==='added:isager54'})){
+    if(!S.colors.some(function(c){return c.k==='isager54'})){
+      S.colors.push({k:'isager54',l:'Petrol (Isager Alpaca 1, nr. 54)',hex:'#526069',g:'bla'});
+      await savePalette();
+    }
+    await save('meta',{id:'added:isager54'});
+  }
+  var keys=S.colors.map(function(c){return c.k});
+  for(var i=0;i<S.items.length;i++){
+    var it=S.items[i],ch=false,tags=mapOcc(it.tags);
+    if(it.cat==='smoking'||it.cat==='dress'){it.cat='blazer';ch=true}
+    if(it.cat==='slips'){it.cat='tilbehor';ch=true}
+    if(tags.join()!==(it.tags||[]).join()){it.tags=tags;ch=true}
+    var col=it.color==='lyseblaa'?'himmelblaa':(it.color||'');
+    if(col&&keys.indexOf(col)<0)col='';
+    if(col!==it.color){it.color=col;ch=true}
+    if(ch)await save('items',it);
+  }
+  for(var j=0;j<S.outfits.length;j++){
+    var o=S.outfits[j],no=OLD_OCC[o.occ]||o.occ;
+    if(no!==o.occ){o.occ=no;await save('outfits',o)}
+  }
+  var nw=[];
+  for(var k=0;k<S.wish.length;k++){
+    var w=S.wish[k];
+    if(w.id==='formelt:slips'||w.id==='hoytidelig:slope'||w.id==='formelt:dress'){await del('wish',w.id);continue}
+    if(/^(forretning|selskap|blacktie):/.test(w.id)){
+      await del('wish',w.id);
+      if(w.kind==='want'){var c={id:uid(),kind:'custom',text:w.text};nw.push(c);await save('wish',c)}
+    }else nw.push(w);
+  }
+  S.wish=nw;
+}
+
+/* ---------- image ---------- */
+function fileToDataURL(file,max){
+  max=max||800;
+  return new Promise(function(res,rej){
+    var fr=new FileReader();
+    fr.onerror=function(){rej(new Error('read'))};
+    fr.onload=function(){
+      var im=new Image();
+      im.onload=function(){
+        var sc=Math.min(1,max/Math.max(im.width,im.height));
+        var c=document.createElement('canvas');
+        c.width=Math.max(1,Math.round(im.width*sc));c.height=Math.max(1,Math.round(im.height*sc));
+        var x=c.getContext('2d');x.fillStyle='#ede2c8';x.fillRect(0,0,c.width,c.height);x.drawImage(im,0,0,c.width,c.height);
+        res(c.toDataURL('image/jpeg',0.9));
+      };
+      im.onerror=function(){rej(new Error('img'))};
+      im.src=fr.result;
+    };
+    fr.readAsDataURL(file);
+  });
+}
+
+/* cream background: only the background connected to the photo's edge is replaced */
+function cleanBg(d,w,h,tol){
+  var rs=[],gs=[],bs=[],X,Y;
+  function add(i){rs.push(d[i]);gs.push(d[i+1]);bs.push(d[i+2])}
+  for(X=0;X<w;X++){add(X*4);add(((h-1)*w+X)*4)}
+  for(Y=0;Y<h;Y++){add(Y*w*4);add((Y*w+w-1)*4)}
+  function med(a){a.sort(function(p,q){return p-q});return a[a.length>>1]}
+  var br=med(rs),bg=med(gs),bb=med(bs),t2=tol*tol;
+  function dist2(i){var dr=d[i]-br,dg=d[i+1]-bg,db=d[i+2]-bb;return dr*dr+dg*dg+db*db}
+  var mask=new Uint8Array(w*h),stack=new Int32Array(w*h),sp=0,count=0;
+  function push(p){if(!mask[p]&&dist2(p*4)<=t2){mask[p]=1;stack[sp++]=p;count++}}
+  for(X=0;X<w;X++){push(X);push((h-1)*w+X)}
+  for(Y=0;Y<h;Y++){push(Y*w);push(Y*w+w-1)}
+  while(sp){
+    var p=stack[--sp],px=p%w,py=(p-px)/w;
+    if(px>0)push(p-1);if(px<w-1)push(p+1);if(py>0)push(p-w);if(py<h-1)push(p+w);
+  }
+  var coverage=count/(w*h);
+  if(coverage<0.02)return coverage;
+  var CR=237,CG=226,CB=200,edge=[];
+  for(var q=0;q<w*h;q++){
+    if(mask[q])continue;
+    var qx=q%w,qy=(q-qx)/w;
+    if((qx>0&&mask[q-1])||(qx<w-1&&mask[q+1])||(qy>0&&mask[q-w])||(qy<h-1&&mask[q+w]))edge.push(q);
+  }
+  for(var e=0;e<edge.length;e++){
+    var i=edge[e]*4,dist=Math.sqrt(dist2(i)),a=Math.max(0,Math.min(1,(dist-tol)/tol));
+    d[i]=Math.round(CR*(1-a)+d[i]*a);d[i+1]=Math.round(CG*(1-a)+d[i+1]*a);d[i+2]=Math.round(CB*(1-a)+d[i+2]*a);
+  }
+  for(var m=0;m<w*h;m++){if(mask[m]){var k=m*4;d[k]=CR;d[k+1]=CG;d[k+2]=CB}}
+  return coverage;
+}
+function creamBg(dataUrl,tol){
+  return new Promise(function(res,rej){
+    var im=new Image();
+    im.onerror=function(){rej(new Error('img'))};
+    im.onload=function(){
+      var w=im.width,h=im.height,c=document.createElement('canvas');
+      c.width=w;c.height=h;
+      var x=c.getContext('2d');x.drawImage(im,0,0);
+      var id=x.getImageData(0,0,w,h),cov=cleanBg(id.data,w,h,tol);
+      if(cov<0.02){res('none');return}
+      if(cov>0.93){res('toomuch');return}
+      x.putImageData(id,0,0);
+      res(c.toDataURL('image/jpeg',0.92));
+    };
+    im.src=dataUrl;
+  });
+}
+var bgToken=0,bgTimer=null;
+function scheduleBg(){
+  clearTimeout(bgTimer);
+  bgTimer=setTimeout(async function(){
+    if(!S.edit||S.edit.bg!=='krem'||!S.edit.imgOrig)return;
+    var my=++bgToken;
+    try{
+      var r=await creamBg(S.edit.imgOrig,S.edit.tol);
+      if(my!==bgToken||!S.edit)return;
+      var out=(r==='none'||r==='toomuch')?S.edit.imgOrig:r;
+      S.edit.img=out;var im=document.querySelector('.photo .mount img');if(im)im.src=out;
+    }catch(e){}
+  },140);
+}
+
+/* ---------- views ---------- */
+function chips(list,cur,act,allLabel,wrap){
+  var all=[{k:'alle',l:allLabel}].concat(list);
+  return '<div class="chips'+(wrap?' wrap-chips':'')+'">'+all.map(function(o){
+    return '<button class="chip" data-act="'+act+'" data-v="'+o.k+'" aria-pressed="'+(cur===o.k)+'">'+esc(o.l)+'</button>';
+  }).join('')+'</div>';
+}
+
+function viewPlagg(){
+  if(!S.items.length){
+    return '<section class="empty"><h2>Start med ett plagg</h2><p>Ta et bilde av en blazer, en kjole eller et par sko. Merk plagget med anledning, så kan du bygge antrekk og se hva som mangler.</p><button class="btn" data-act="newItem">Legg til plagg</button></section>'+foot();
+  }
+  var list=S.items.slice().sort(function(a,b){return b.created-a.created}).filter(function(i){
+    var se=i.seasons||[];
+    var seasonOk=S.fSeason==='alle'||(S.fSeason==='helars'?se.indexOf('helars')>-1:(se.indexOf(S.fSeason)>-1||se.indexOf('helars')>-1));
+    return (S.fOcc==='alle'||i.tags.indexOf(S.fOcc)>-1)&&(S.fCat==='alle'||i.cat===S.fCat)&&seasonOk;
+  });
+  var h='<div class="filters">'+chips(OCCS,S.fOcc,'fOcc','Alle anledninger')+chips(CATS,S.fCat,'fCat','Alle typer')+chips(SEASONS,S.fSeason,'fSeason','Alle sesonger')+'</div>';
+  if(!list.length){
+    h+='<p class="lead">Ingen plagg passer med filteret.</p>';
+  }else{
+    h+='<div class="grid">'+list.map(function(i){
+      var c=colObj(i.color);
+      var tg=i.tags.length?i.tags.map(occL).join(', '):'Ikke merket med anledning';
+      return '<button class="item" data-act="openItem" data-id="'+i.id+'">'+mount(i)+
+        '<span class="nm">'+esc(i.name)+'</span>'+
+        '<span class="meta">'+(c.none?'':'<i class="dot" style="background:'+esc(c.hex)+'" title="'+esc(c.l)+'"></i>')+esc(catL(i.cat))+'</span>'+
+        '<span class="tg">'+esc(tg)+'</span>'+((i.seasons||[]).length?'<span class="tg">'+esc(i.seasons.map(seasonL).join(', '))+'</span>':'')+'</button>';
+    }).join('')+'</div>';
+  }
+  return h+foot();
+}
+function fmtDate(iso){
+  try{return new Date(iso).toLocaleDateString('nb-NO',{day:'numeric',month:'long',year:'numeric'})}catch(e){return ''}
+}
+function foot(){
+  return '<section class="backup"><h2 class="grp2">Sikkerhetskopi</h2>'+
+    '<p class="hint">Plagg og bilder ligger bare i denne nettleseren, på denne enheten. Lagre en kopi av og til, så kan du hente alt tilbake hvis du bytter telefon, tømmer nettleseren eller flytter appen til en annen adresse.</p>'+
+    '<p class="hint">'+(S.lastBackup?'Siste sikkerhetskopi: '+esc(fmtDate(S.lastBackup))+'.':'Du har ikke lagret noen sikkerhetskopi ennå.')+'</p>'+
+    '<div class="row"><button class="btn" data-act="backupSave">Lagre sikkerhetskopi</button>'+
+    '<button class="btn ghost" data-act="backupPick">Last inn sikkerhetskopi</button></div>'+
+    '<input class="vh" type="file" id="backupFile" accept=".json,application/json" aria-label="Velg sikkerhetskopi"></section>';
+}
+
+function viewAntrekk(){
+  var n=SLOTS.filter(function(s){return byId(S.cur[s.k])}).length;
+  var tiles=SLOTS.map(function(s){
+    var it=byId(S.cur[s.k]),w=s.coat?' coat':(s.tall?' tall':'');
+    return it
+      ? '<button class="slot filled'+w+'" data-act="pickSlot" data-k="'+s.k+'" aria-label="'+esc(s.l)+': '+esc(it.name)+'. Bytt plagg">'+mount(it)+'<span class="nm">'+esc(it.name)+'</span></button>'
+      : '<button class="slot'+w+'" data-act="pickSlot" data-k="'+s.k+'">'+PLUS+'<span>'+s.l+'</span></button>';
+  }).join('');
+  var h='<div class="filters"><span class="lbl" style="margin-bottom:6px">Anledning</span>'+
+    '<div class="chips">'+OCCS.map(function(o){return '<button class="chip" data-act="occ" data-v="'+o.k+'" aria-pressed="'+(S.occ===o.k)+'">'+o.l+'</button>'}).join('')+'</div></div>';
+  h+='<div class="panel">'+tiles+'</div>';
+  h+='<div class="panel-actions"><button class="btn ghost" data-act="suggest">Foreslå antrekk</button><button class="btn ghost" data-act="clearCur"'+(n?'':' disabled')+'>Tøm</button></div>';
+  h+='<label class="fld"><span>Navn på antrekket</span><input data-f="curName" value="'+esc(S.curName)+'" placeholder="f.eks. Styremøte eller bryllup i juni" autocomplete="off"></label>';
+  h+='<div class="row"><button class="btn" data-act="saveOutfit">'+(S.curId?'Oppdater antrekk':'Lagre antrekk')+'</button>'+(S.curId?'<button class="btn ghost" data-act="newOutfit">Nytt antrekk</button>':'')+'</div>';
+
+  var outs=S.outfits.slice().sort(function(a,b){return b.created-a.created});
+  h+='<h2 class="grp">Lagrede antrekk</h2>';
+  if(!outs.length){
+    h+='<p class="lead">Ingen antrekk ennå. Velg plagg i hver rute over og lagre kombinasjonen.</p>';
+  }else{
+    h+='<ul class="ol">'+outs.map(function(o){
+      var th=SLOTS.map(function(s){return byId(o.slots[s.k])}).filter(Boolean).map(function(i){return '<span class="th">'+mount(i)+'</span>'}).join('');
+      return '<li class="of"><div class="oi"><strong>'+esc(o.name)+'</strong><span class="meta">'+esc(occL(o.occ))+'</span></div>'+
+        '<div class="oa"><button class="sm" data-act="openOutfit" data-id="'+o.id+'">Åpne</button>'+
+        '<button class="sm danger" data-act="delOutfit" data-id="'+o.id+'">'+(S.confirmOutfit===o.id?'Sikker?':'Slett')+'</button></div>'+
+        '<div class="strip">'+th+'</div></li>';
+    }).join('')+'</ul>';
+  }
+  return h;
+}
+
+function wishOf(id){return S.wish.filter(function(w){return w.id===id})[0]}
+
+function viewMangler(){
+  var h='<p class="lead">Et plagg teller når det er merket med riktig anledning. Hopp over det som ikke passer for deg.</p>';
+  ESS.forEach(function(g){
+    var rows=g.items.map(function(e){
+      var id=g.k+':'+e.k,w=wishOf(id);
+      var found=S.items.filter(function(i){
+        return i.tags.indexOf(g.k)>-1&&e.cats.indexOf(i.cat)>-1&&(!e.colors||e.colors.indexOf(i.color)>-1);
+      })[0];
+      return {e:e,id:id,w:w,found:found,skipped:!!(w&&w.kind==='skip')};
+    });
+    var act=rows.filter(function(r){return !r.skipped}),have=act.filter(function(r){return r.found}).length;
+    h+='<section><h2 class="grp">'+g.l+'</h2>'+
+      '<div class="stitch" aria-hidden="true">'+act.map(function(r){return '<i class="'+(r.found?'on':'')+'"></i>'}).join('')+'</div>'+
+      '<p class="prog">'+have+' av '+act.length+' på plass</p><ul class="ess-list">';
+    rows.forEach(function(r){
+      var a='data-g="'+g.k+'" data-e="'+r.e.k+'"',body,mark;
+      if(r.skipped){
+        mark='';
+        body='<span class="el muted strike">'+r.e.l+'</span><div class="ra"><button class="sm" data-act="unskip" '+a+'>Angre</button></div>';
+      }else if(r.found){
+        mark=CHECK;
+        body='<span class="el">'+r.e.l+'</span><span class="ef">'+mount(r.found)+'<span>'+esc(r.found.name)+'</span></span>';
+      }else{
+        mark=OPEN;
+        var on=r.w&&r.w.kind==='want';
+        body='<span class="el">'+r.e.l+'</span><div class="ra">'+
+          '<button class="sm" data-act="addFor" '+a+'>Legg til plagg</button>'+
+          '<button class="sm" data-act="want" aria-pressed="'+(!!on)+'" '+a+'>'+(on?'På ønskelisten':'Ønskeliste')+'</button>'+
+          '<button class="sm" data-act="skip" '+a+'>Hopp over</button></div>';
+      }
+      h+='<li class="ess"><span>'+mark+'</span><div>'+body+'</div></li>';
+    });
+    h+='</ul></section>';
+  });
+  var wl=S.wish.filter(function(w){return w.kind!=='skip'});
+  h+='<h2 class="grp">Ønskeliste</h2>';
+  h+=wl.length
+    ? '<ul class="wl">'+wl.map(function(w){return '<li><span>'+esc(w.text)+'</span><button class="x" data-act="delWish" data-id="'+esc(w.id)+'" aria-label="Fjern '+esc(w.text)+'">'+CLOSE+'</button></li>'}).join('')+'</ul>'
+    : '<p class="lead">Tom foreløpig. Sett manglende plagg på listen, eller skriv inn egne ønsker.</p>';
+  h+='<div class="addrow"><input data-f="custom" value="'+esc(S.customText)+'" placeholder="Eget ønske, f.eks. mørkegrønn fløyelsblazer" autocomplete="off"><button class="btn" data-act="addCustom">Legg til</button></div>';
+  return h;
+}
+
+function viewPalett(){
+  var h='<p class="lead">Fargene som kler deg, sortert etter fargegruppe. Trykk på en farge for å endre den, eller legg til en ny. Plaggene kan merkes med fargene her.</p>';
+  h+='<div class="row"><button class="btn" data-act="newColor">Ny farge</button></div>';
+  var sorted=sortedColors();
+  GROUPS.forEach(function(g){
+    var cs=sorted.filter(function(c){return cg(c)===g.k});
+    if(!cs.length)return;
+    h+='<h2 class="grp2">'+g.l+'</h2><div class="pal">'+cs.map(function(c){
+      var n=S.items.filter(function(i){return i.color===c.k}).length;
+      return '<button class="chipc" data-act="editColor" data-id="'+esc(c.k)+'"><span class="cc" style="background:'+esc(c.hex)+'"></span><span class="cn">'+esc(c.l)+'</span><span class="cm">'+n+' plagg</span></button>';
+    }).join('')+'</div>';
+  });
+  if(!S.colors.length)h+='<p class="lead">Paletten er tom. Legg til den første fargen.</p>';
+  return h;
+}
+
+function render(){
+  $('#count').textContent=S.items.length+' plagg, '+S.outfits.length+' antrekk';
+  $('#warn').innerHTML=S.storage?'':'<p class="warn">Lagring er ikke tilgjengelig i denne nettleseren. Plaggene forsvinner når du lukker siden.</p>';
+  $('#view').innerHTML=S.tab==='plagg'?viewPlagg():S.tab==='antrekk'?viewAntrekk():S.tab==='mangler'?viewMangler():viewPalett();
+  document.querySelectorAll('.tabs button').forEach(function(b){b.setAttribute('aria-current',b.dataset.v===S.tab?'page':'false')});
+  $('#fab').hidden=(S.tab!=='plagg'||!S.items.length);
+}
+
+/* ---------- sheets ---------- */
+function editHTML(){
+  var e=S.edit,isNew=!e.id;
+  var photo=e.img
+    ? '<div class="photo"><div class="mount"><img src="'+e.img+'" alt="Bilde av plagget"></div></div><button class="sm swap" data-act="pickFile">Bytt bilde</button>'
+    : '<label class="photo photo-empty" for="file"><span><b>Legg til bilde</b>Ta et bilde eller velg fra biblioteket</span></label>';
+  var sw=sortedColors().map(function(c){
+    return '<button style="background:'+esc(c.hex)+'" data-act="setColor" data-v="'+esc(c.k)+'" aria-pressed="'+(e.color===c.k)+'" aria-label="'+esc(c.l)+'" title="'+esc(c.l)+'"></button>';
+  }).join('')+'<button class="add" data-act="newColor" aria-label="Legg til ny farge" title="Ny farge">'+PLUS+'</button>';
+  var cl=colObj(e.color);
+  var tg=OCCS.map(function(o){
+    return '<button class="chip" data-act="toggleTag" data-v="'+o.k+'" aria-pressed="'+(e.tags.indexOf(o.k)>-1)+'">'+o.l+'</button>';
+  }).join('');
+  var se=SEASONS.map(function(o){
+    return '<button class="chip" data-act="toggleSeason" data-v="'+o.k+'" aria-pressed="'+((e.seasons||[]).indexOf(o.k)>-1)+'">'+o.l+'</button>';
+  }).join('');
+  var opts=CATS.map(function(c){return '<option value="'+c.k+'"'+(e.cat===c.k?' selected':'')+'>'+c.l+'</option>'}).join('');
+  return '<div class="scrim" data-act="closeSheet"></div>'+
+  '<div class="sheet'+(S.keep?'':' enter')+'" role="dialog" aria-modal="true" aria-labelledby="st" tabindex="-1">'+
+    '<div class="sheet-h"><h2 id="st">'+(isNew?'Nytt plagg':'Rediger plagg')+'</h2><button class="x" data-act="closeSheet" aria-label="Lukk">'+CLOSE+'</button></div>'+
+    '<input class="vh" type="file" id="file" accept="image/*">'+
+    photo+
+    '<p class="tip">Legg plagget på et jevnt, lyst underlag for best resultat.</p>'+
+    (e.img?'<div class="fld"><span class="lbl">Bakgrunn på bildet</span><div class="chips wrap-chips">'+
+      '<button class="chip" data-act="bgSet" data-v="orig" aria-pressed="'+(e.bg!=='krem')+'">Original</button>'+
+      '<button class="chip" data-act="bgSet" data-v="krem" aria-pressed="'+(e.bg==='krem')+'">Krem</button></div>'+
+      (e.bg==='krem'?'<label class="rng"><span>Følsomhet</span><input type="range" min="8" max="70" value="'+(e.tol||28)+'" data-f="tol" aria-label="Følsomhet for bakgrunn"></label>'+
+      '<p class="hint">Bare bakgrunnen som henger sammen med bildekanten byttes ut, og plaggets farger røres ikke. Øk følsomheten hvis det er hvite rester rundt plagget. Senk den hvis plagget selv blir spist opp, for eksempel et hvitt plagg på hvit bunn.</p>':'')+
+      '</div>':'')+
+    '<label class="fld"><span>Navn</span><input data-f="name" value="'+esc(e.name)+'" placeholder="f.eks. Marineblå ullblazer" autocomplete="off"></label>'+
+    '<label class="fld"><span>Type</span><select data-f="cat">'+opts+'</select></label>'+
+    '<div class="fld"><span class="lbl">'+(cl.none?'Farge: ingen valgt':'Farge: '+esc(cl.l))+'</span><div class="sw">'+sw+'</div></div>'+
+    '<div class="fld"><span class="lbl">Passer til</span><div class="chips wrap-chips">'+tg+'</div></div>'+
+    '<div class="fld"><span class="lbl">Sesong</span><div class="chips wrap-chips">'+se+'</div></div>'+
+    '<label class="fld"><span>Notat</span><textarea data-f="note" rows="2" placeholder="Stoff, passform, når du brukte det sist">'+esc(e.note)+'</textarea></label>'+
+    '<div class="row"><button class="btn" data-act="saveItem">Lagre plagg</button>'+
+    (isNew?'':'<button class="btn danger" data-act="delItem">'+(S.confirmDel?'Trykk igjen for å slette':'Slett')+'</button>')+'</div>'+
+  '</div>';
+}
+
+function pickHTML(){
+  var s=SLOTS.filter(function(x){return x.k===S.picker})[0];
+  var el=S.items.filter(function(i){return s.cats.indexOf(i.cat)>-1}).sort(function(a,b){
+    var am=a.tags.indexOf(S.occ)>-1?0:1,bm=b.tags.indexOf(S.occ)>-1?0:1;
+    return am-bm||b.created-a.created;
+  });
+  var body;
+  if(!el.length){
+    body='<p class="lead">Du har ingen plagg av denne typen ennå.</p><div class="row"><button class="btn" data-act="addForSlot">Legg til plagg</button></div>';
+  }else{
+    body='<p class="lead">Plagg merket «'+occL(S.occ)+'» ligger først.</p><div class="pickgrid">'+el.map(function(i){
+      return '<button class="pick" data-act="pick" data-id="'+i.id+'" aria-pressed="'+(S.cur[s.k]===i.id)+'">'+mount(i)+'<span class="pn">'+esc(i.name)+'</span></button>';
+    }).join('')+'</div>';
+    if(S.cur[s.k]) body+='<div class="row"><button class="btn ghost" data-act="clearSlot">Fjern fra antrekket</button></div>';
+  }
+  return '<div class="scrim" data-act="closeSheet"></div>'+
+  '<div class="sheet enter" role="dialog" aria-modal="true" aria-labelledby="st" tabindex="-1">'+
+    '<div class="sheet-h"><h2 id="st">'+esc(s.l)+'</h2><button class="x" data-act="closeSheet" aria-label="Lukk">'+CLOSE+'</button></div>'+body+'</div>';
+}
+
+function renderSheet(keep,st0){
+  var root=$('#sheetRoot'),old=root.querySelector('.sheet'),st=(st0!=null)?st0:((keep&&old)?old.scrollTop:0);
+  if(!S.sheet){root.innerHTML='';document.body.style.overflow='';return}
+  S.keep=!!keep;
+  root.innerHTML=S.sheet==='edit'?editHTML():S.sheet==='color'?colorHTML():S.sheet==='import'?importHTML():pickHTML();
+  document.body.style.overflow='hidden';
+  var sh=root.querySelector('.sheet');
+  sh.scrollTop=st;
+  if(!keep) sh.focus({preventScroll:true});
+}
+function closeSheet(){S.sheet=null;S.edit=null;S.picker=null;S.importData=null;S.confirmDel=false;renderSheet()}
+
+function importHTML(){
+  var d=S.importData,n=d.items.length,o=(d.outfits||[]).length,c=(d.colors||[]).length;
+  var when=d.exported?' Kopien er lagret '+fmtDate(d.exported)+'.':'';
+  return '<div class="scrim" data-act="closeSheet"></div>'+
+  '<div class="sheet enter" role="dialog" aria-modal="true" aria-labelledby="st" tabindex="-1">'+
+    '<div class="sheet-h"><h2 id="st">Last inn sikkerhetskopi</h2><button class="x" data-act="closeSheet" aria-label="Lukk">'+CLOSE+'</button></div>'+
+    '<p class="lead">Filen har '+n+' plagg, '+o+' antrekk og '+c+' farger.'+esc(when)+'</p>'+
+    '<p class="hint"><b>Slå sammen</b> legger det som mangler til det du har nå. Finnes det samme plagget begge steder, er det filens versjon som gjelder. <b>Erstatt alt</b> sletter det du har nå og bruker bare filen.</p>'+
+    '<div class="row"><button class="btn" data-act="importMerge">Slå sammen</button>'+
+    '<button class="btn danger" data-act="importReplace">'+(S.confirmDel?'Trykk igjen for å erstatte alt':'Erstatt alt')+'</button>'+
+    '<button class="btn ghost" data-act="closeSheet">Avbryt</button></div></div>';
+}
+function backupName(){
+  var d=new Date(),p=function(n){return ('0'+n).slice(-2)};
+  return 'garderoben-'+d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'.json';
+}
+function backupJSON(){
+  return JSON.stringify({app:'garderoben',version:1,exported:new Date().toISOString(),items:S.items,outfits:S.outfits,wish:S.wish,colors:S.colors});
+}
+async function markBackup(){
+  S.lastBackup=new Date().toISOString();
+  await save('meta',{id:'lastBackup',at:S.lastBackup});
+  render();toast('Sikkerhetskopien er lagret');
+}
+function readFileText(file){
+  return new Promise(function(res,rej){var fr=new FileReader();fr.onload=function(){res(fr.result)};fr.onerror=function(){rej(new Error('read'))};fr.readAsText(file)});
+}
+function normImported(it){
+  it.tags=mapOcc(it.tags||[]);it.seasons=it.seasons||[];
+  if(it.cat==='smoking'||it.cat==='dress')it.cat='blazer';
+  if(it.cat==='slips')it.cat='tilbehor';
+  return it;
+}
+function mergeBy(cur,inc,key){
+  var m={},order=[];
+  cur.concat(inc).forEach(function(x){if(!(x[key] in m))order.push(x[key]);m[x[key]]=x});
+  return order.map(function(k){return m[k]});
+}
+async function applyImport(mode){
+  var d=S.importData;if(!d)return;
+  var items=d.items.map(normImported),outfits=d.outfits||[],wish=d.wish||[],colors=d.colors||[];
+  if(mode==='replace'){S.items=items;S.outfits=outfits;S.wish=wish;S.colors=colors}
+  else{
+    S.items=mergeBy(S.items,items,'id');S.outfits=mergeBy(S.outfits,outfits,'id');
+    S.wish=mergeBy(S.wish,wish,'id');S.colors=mergeBy(S.colors,colors,'k');
+  }
+  S.colors.forEach(function(c){if(!c.g)c.g=groupOf(c.hex)});
+  var count=items.length;
+  closeSheet();render();
+  if(db){
+    try{
+      if(mode==='replace'){await dbClear('items');await dbClear('outfits');await dbClear('wish')}
+      await dbPutMany('items',S.items);await dbPutMany('outfits',S.outfits);await dbPutMany('wish',S.wish);
+      await savePalette();
+      toast('Lastet inn '+count+' plagg');
+    }catch(e){toast('Noe gikk galt under lagring. Prøv igjen, eller last inn en mindre fil.')}
+  }else toast('Lastet inn '+count+' plagg');
+}
+
+function colorHTML(){
+  var d=S.cdraft,isNew=!d.id;
+  var n=isNew?0:S.items.filter(function(i){return i.color===d.id}).length;
+  return '<div class="scrim" data-act="closeSheet"></div>'+
+  '<div class="sheet enter" role="dialog" aria-modal="true" aria-labelledby="st" tabindex="-1">'+
+    '<div class="sheet-h"><h2 id="st">'+(isNew?'Ny farge':'Rediger farge')+'</h2><button class="x" data-act="closeSheet" aria-label="Lukk">'+CLOSE+'</button></div>'+
+    '<div class="cbig" id="cbig" style="background:'+esc(d.hex)+'"></div>'+
+    '<label class="fld"><span>Navn</span><input data-f="cname" value="'+esc(d.name)+'" placeholder="f.eks. Himmelblå" autocomplete="off"></label>'+
+    '<div class="fld"><span class="lbl">Nyanse</span><div class="hexrow"><input type="color" data-f="chex" value="'+esc(d.hex)+'" aria-label="Velg nyanse"><input type="text" data-f="chext" value="'+esc(d.hex)+'" maxlength="7" autocapitalize="off" autocomplete="off" spellcheck="false" aria-label="Hex-kode"></div></div>'+
+    '<label class="fld"><span>Fargegruppe</span><select data-f="cgrp">'+GROUPS.map(function(g){return '<option value="'+g.k+'"'+(d.g===g.k?' selected':'')+'>'+g.l+'</option>'}).join('')+'</select></label>'+
+    '<p class="hint">Velges automatisk ut fra nyansen. Du kan endre den selv.</p>'+
+    ((!isNew&&S.confirmDel&&n)?'<p class="lead">'+n+' plagg mister fargen hvis du sletter den.</p>':'')+
+    '<div class="row"><button class="btn" data-act="saveColor">Lagre farge</button>'+
+    (isNew?'':'<button class="btn danger" data-act="delColor">'+(S.confirmDel?'Trykk igjen for å slette':'Slett')+'</button>')+'</div>'+
+  '</div>';
+}
+function leaveColor(){
+  var back=S.colorFrom;
+  S.colorFrom=null;S.cdraft=null;S.confirmDel=false;S.sheet=back;
+  if(back==='edit')renderSheet(true,S.editScroll);else renderSheet();
+}
+function setHex(h,other){
+  S.cdraft.hex=h;
+  if(!S.cdraft.gManual){
+    S.cdraft.g=groupOf(h);
+    var gs=document.querySelector('[data-f="cgrp"]');if(gs)gs.value=S.cdraft.g;
+  }
+  var o=document.querySelector('[data-f="'+other+'"]');if(o)o.value=h;
+  var p=$('#cbig');if(p)p.style.background=h;
+}
+
+function openEdit(id,preset){
+  var it=id?byId(id):null;
+  preset=preset||{};
+  S.edit=it?Object.assign({},it,{tags:it.tags.slice(),seasons:(it.seasons||[]).slice()}):
+    {id:null,name:'',cat:preset.cat||'blazer',color:preset.color||'',tags:preset.tag?[preset.tag]:[],seasons:[],note:'',img:'',imgOrig:'',bg:'orig',tol:28};
+  if(it){S.edit.bg=it.imgOrig?'krem':'orig';S.edit.tol=it.tol||28;S.edit.imgOrig=it.imgOrig||''}
+  S.confirmDel=false;S.sheet='edit';renderSheet(false);
+}
+
+/* ---------- actions ---------- */
+function suggest(){
+  var out={},occ=S.occ;
+  function pool(cats){return S.items.filter(function(i){return cats.indexOf(i.cat)>-1&&i.tags.indexOf(occ)>-1})}
+  function rnd(a){return a[Math.floor(Math.random()*a.length)]}
+  var anyTagged=S.items.some(function(i){return i.tags.indexOf(occ)>-1});
+  if(!anyTagged){toast('Ingen plagg er merket «'+occL(occ)+'» ennå');return}
+  var p;
+  if((p=pool(['yttertoy'])).length) out.yttertoy=rnd(p).id;
+  var j=pool(['blazer']);
+  var jacket=j.length?rnd(j):null;
+  if(jacket){
+    out.jakke=jacket.id;
+  }
+  var noShirt=false;
+  if(!out.underdel){
+    var u=pool(['bukse','kjole']);
+    if(u.length){var pick=rnd(u);out.underdel=pick.id;if(pick.cat==='kjole')noShirt=true}
+  }
+  if(!noShirt){
+    if((p=pool(['skjorte','genser','topp'])).length) out.overdel=rnd(p).id;
+  }
+  if((p=pool(['sko'])).length) out.sko=rnd(p).id;
+  if((p=pool(['belte','tilbehor'])).length) out.tilbehor=rnd(p).id;
+  S.cur=out;S.curId=null;render();
+}
+
+var H={
+  noop:function(){},
+  pickFile:function(){var f=document.getElementById('file');if(f)f.click()},
+  tab:function(d){S.tab=d.v;S.sheet=null;renderSheet();render();window.scrollTo(0,0)},
+  fOcc:function(d){S.fOcc=d.v;render()},
+  fCat:function(d){S.fCat=d.v;render()},
+  fSeason:function(d){S.fSeason=d.v;render()},
+  toggleSeason:function(d){var t=S.edit.seasons,i=t.indexOf(d.v);if(i>-1)t.splice(i,1);else t.push(d.v);renderSheet(true)},
+  newItem:function(){openEdit(null)},
+  openItem:function(d){openEdit(d.id)},
+  closeSheet:function(){if(S.sheet==='color'){leaveColor();return}closeSheet()},
+  backupPick:function(){var f=document.getElementById('backupFile');if(f)f.click()},
+  backupSave:async function(){
+    var json=backupJSON(),name=backupName();
+    try{
+      if(window.claude&&typeof window.claude.use==='function'){
+        var dl=await window.claude.use('downloads');
+        if(dl){await dl.save({filename:name,data:json});await markBackup();return}
+      }
+      var file=null;
+      try{file=new File([json],name,{type:'application/json'})}catch(e){}
+      var touch=window.matchMedia&&window.matchMedia('(pointer:coarse)').matches;
+      if(touch&&file&&navigator.canShare&&navigator.canShare({files:[file]})&&navigator.share){
+        await navigator.share({files:[file],title:'Garderoben, sikkerhetskopi'});
+        await markBackup();return;
+      }
+      var url=URL.createObjectURL(new Blob([json],{type:'application/json'}));
+      var a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();
+      setTimeout(function(){URL.revokeObjectURL(url);a.remove()},4000);
+      await markBackup();
+    }catch(e){
+      if(e&&(e.name==='AbortError'||e.code==='declined'))return;
+      toast('Kunne ikke lagre sikkerhetskopien');
+    }
+  },
+  importMerge:function(){applyImport('merge')},
+  importReplace:function(){
+    if(!S.confirmDel){S.confirmDel=true;renderSheet(true);return}
+    applyImport('replace');
+  },
+  bgSet:async function(d){
+    var e=S.edit;if(!e||!e.img)return;
+    if(d.v==='krem'){
+      var fresh=!e.imgOrig;
+      if(fresh)e.imgOrig=e.img;
+      if(!e.tol)e.tol=28;
+      try{
+        var r=await creamBg(e.imgOrig,e.tol);
+        if(r==='none'){if(fresh)e.imgOrig='';e.bg='orig';renderSheet(true);toast('Fant ingen jevn bakgrunn langs kanten å bytte ut');return}
+        e.bg='krem';
+        if(r==='toomuch'){e.img=e.imgOrig;toast('Plagget ligner for mye på bakgrunnen. Senk følsomheten.')}
+        else e.img=r;
+      }catch(err){if(fresh)e.imgOrig='';toast('Kunne ikke behandle bildet');return}
+    }else{
+      e.bg='orig';if(e.imgOrig)e.img=e.imgOrig;
+    }
+    renderSheet(true);
+  },
+  setColor:function(d){S.edit.color=(S.edit.color===d.v)?'':d.v;renderSheet(true)},
+  newColor:function(){
+    S.colorFrom=(S.sheet==='edit')?'edit':null;
+    if(S.colorFrom){var sh=document.querySelector('.sheet');S.editScroll=sh?sh.scrollTop:0}
+    S.cdraft={id:null,name:'',hex:'#8aa4c8',g:groupOf('#8aa4c8'),gManual:false};S.confirmDel=false;S.sheet='color';renderSheet(false);
+  },
+  editColor:function(d){
+    var c=S.colors.filter(function(x){return x.k===d.id})[0];if(!c)return;
+    S.colorFrom=null;var auto=groupOf(c.hex),cur=cg(c);S.cdraft={id:c.k,name:c.l,hex:c.hex,g:cur,gManual:cur!==auto};S.confirmDel=false;S.sheet='color';renderSheet(false);
+  },
+  saveColor:async function(){
+    var d=S.cdraft,name=(d.name||'').trim();
+    if(!name){toast('Gi fargen et navn');return}
+    var tf=document.querySelector('[data-f="chext"]'),hex=normHex(tf?tf.value:d.hex);
+    if(!hex){toast('Hex-koden må ha seks tegn, f.eks. #87CEEB');return}
+    var id=d.id;
+    var grp=d.gManual?d.g:groupOf(hex);
+    if(id){S.colors=S.colors.map(function(c){return c.k===id?{k:id,l:name,hex:hex,g:grp}:c})}
+    else{
+      id='c'+uid();S.colors.push({k:id,l:name,hex:hex,g:grp});
+      if(S.colorFrom==='edit'&&S.edit)S.edit.color=id;
+    }
+    leaveColor();render();
+    if(await savePalette())toast('Fargen er lagret');
+  },
+  delColor:async function(){
+    if(!S.confirmDel){S.confirmDel=true;renderSheet(true);return}
+    var id=S.cdraft.id,changed=[];
+    S.colors=S.colors.filter(function(c){return c.k!==id});
+    S.items.forEach(function(i){if(i.color===id){i.color='';changed.push(i)}});
+    if(S.edit&&S.edit.color===id)S.edit.color='';
+    leaveColor();render();
+    await savePalette();
+    for(var n=0;n<changed.length;n++)await save('items',changed[n]);
+    toast('Fargen er slettet');
+  },
+  toggleTag:function(d){var t=S.edit.tags,i=t.indexOf(d.v);if(i>-1)t.splice(i,1);else t.push(d.v);renderSheet(true)},
+  saveItem:async function(){
+    var e=S.edit;
+    var obj={id:e.id||uid(),name:(e.name||'').trim()||catL(e.cat),cat:e.cat,color:e.color,tags:e.tags.slice(),seasons:(e.seasons||[]).slice(),note:e.note||'',img:e.img||'',imgOrig:(e.bg==='krem'&&e.imgOrig)?e.imgOrig:'',tol:e.tol||28,created:e.created||Date.now()};
+    var idx=S.items.findIndex(function(i){return i.id===obj.id});
+    if(idx>-1)S.items[idx]=obj;else S.items.push(obj);
+    closeSheet();render();
+    if(await save('items',obj)) toast('Plagget er lagret');
+  },
+  delItem:async function(){
+    if(!S.confirmDel){S.confirmDel=true;renderSheet(true);return}
+    var id=S.edit.id;
+    S.items=S.items.filter(function(i){return i.id!==id});
+    Object.keys(S.cur).forEach(function(k){if(S.cur[k]===id)delete S.cur[k]});
+    closeSheet();render();await del('items',id);toast('Plagget er slettet');
+  },
+  occ:function(d){S.occ=d.v;render()},
+  pickSlot:function(d){S.picker=d.k;S.sheet='pick';renderSheet(false)},
+  pick:function(d){
+    S.cur[S.picker]=d.id;
+    var it=byId(d.id);
+    closeSheet();render();
+  },
+  clearSlot:function(){delete S.cur[S.picker];closeSheet();render()},
+  addForSlot:function(){
+    var s=SLOTS.filter(function(x){return x.k===S.picker})[0];
+    openEdit(null,{cat:s.cats[0],tag:S.occ});
+  },
+  suggest:suggest,
+  clearCur:function(){S.cur={};S.curName='';S.curId=null;render()},
+  newOutfit:function(){S.cur={};S.curName='';S.curId=null;render()},
+  saveOutfit:async function(){
+    var slots={};
+    SLOTS.forEach(function(s){if(byId(S.cur[s.k]))slots[s.k]=S.cur[s.k]});
+    if(Object.keys(slots).length<2){toast('Velg minst to plagg først');return}
+    var prev=S.outfits.filter(function(x){return x.id===S.curId})[0];
+    var o={id:S.curId||uid(),name:(S.curName||'').trim()||'Antrekk uten navn',occ:S.occ,slots:slots,created:prev?prev.created:Date.now()};
+    var i=S.outfits.findIndex(function(x){return x.id===o.id});
+    if(i>-1)S.outfits[i]=o;else S.outfits.push(o);
+    S.curId=o.id;render();
+    if(await save('outfits',o)) toast('Antrekket er lagret');
+  },
+  openOutfit:function(d){
+    var o=S.outfits.filter(function(x){return x.id===d.id})[0];if(!o)return;
+    S.cur=Object.assign({},o.slots);S.curName=o.name;S.curId=o.id;S.occ=o.occ;S.confirmOutfit=null;render();window.scrollTo(0,0);
+  },
+  delOutfit:async function(d){
+    if(S.confirmOutfit!==d.id){S.confirmOutfit=d.id;render();return}
+    S.outfits=S.outfits.filter(function(x){return x.id!==d.id});
+    if(S.curId===d.id)S.curId=null;
+    S.confirmOutfit=null;render();await del('outfits',d.id);toast('Antrekket er slettet');
+  },
+  addFor:function(d){
+    var g=ESS.filter(function(x){return x.k===d.g})[0],e=g.items.filter(function(x){return x.k===d.e})[0];
+    openEdit(null,{cat:e.cats[0],tag:g.k,color:e.colors?e.colors[0]:undefined});
+  },
+  want:async function(d){
+    var id=d.g+':'+d.e,ex=wishOf(id);
+    if(ex&&ex.kind==='want'){S.wish=S.wish.filter(function(w){return w.id!==id});render();await del('wish',id);return}
+    var g=ESS.filter(function(x){return x.k===d.g})[0],e=g.items.filter(function(x){return x.k===d.e})[0];
+    var w={id:id,kind:'want',text:g.l+': '+e.l};
+    S.wish=S.wish.filter(function(x){return x.id!==id}).concat([w]);render();await save('wish',w);toast('Lagt på ønskelisten');
+  },
+  skip:async function(d){
+    var id=d.g+':'+d.e,w={id:id,kind:'skip',text:''};
+    S.wish=S.wish.filter(function(x){return x.id!==id}).concat([w]);render();await save('wish',w);
+  },
+  unskip:async function(d){
+    var id=d.g+':'+d.e;
+    S.wish=S.wish.filter(function(x){return x.id!==id});render();await del('wish',id);
+  },
+  addCustom:async function(){
+    var t=(S.customText||'').trim();if(!t){toast('Skriv inn hva du ønsker deg');return}
+    var w={id:uid(),kind:'custom',text:t};
+    S.wish.push(w);S.customText='';render();await save('wish',w);
+  },
+  delWish:async function(d){
+    S.wish=S.wish.filter(function(w){return w.id!==d.id});render();await del('wish',d.id);
+  }
+};
+
+document.addEventListener('click',function(e){
+  var b=e.target.closest('[data-act]');if(!b)return;
+  var f=H[b.dataset.act];if(f)f(b.dataset);
+});
+document.addEventListener('input',function(e){
+  var f=e.target.dataset&&e.target.dataset.f;if(!f)return;
+  if(f==='tol'&&S.edit){S.edit.tol=+e.target.value;scheduleBg();return}
+  if(f==='cname'&&S.cdraft){S.cdraft.name=e.target.value;return}
+  if(f==='chex'&&S.cdraft){setHex(e.target.value.toLowerCase(),'chext');return}
+  if(f==='chext'&&S.cdraft){var hx=normHex(e.target.value);if(hx)setHex(hx,'chex');return}
+  if(f==='cgrp'&&S.cdraft){S.cdraft.g=e.target.value;S.cdraft.gManual=true;return}
+  if(f==='curName')S.curName=e.target.value;
+  else if(f==='custom')S.customText=e.target.value;
+  else if(S.edit)S.edit[f]=e.target.value;
+});
+document.addEventListener('change',async function(e){
+  if(e.target.id==='backupFile'&&e.target.files&&e.target.files[0]){
+    var bf=e.target.files[0];e.target.value='';
+    try{
+      var data=JSON.parse(await readFileText(bf));
+      if(!data||data.app!=='garderoben'||!Array.isArray(data.items))throw new Error('format');
+      S.importData=data;S.confirmDel=false;S.sheet='import';renderSheet(false);
+    }catch(err){toast('Filen ser ikke ut som en sikkerhetskopi fra Garderoben')}
+    return;
+  }
+  if(e.target.id!=='file'||!e.target.files||!e.target.files[0])return;
+  try{S.edit.img=await fileToDataURL(e.target.files[0],800);S.edit.imgOrig='';S.edit.bg='orig';renderSheet(true)}
+  catch(err){toast('Kunne ikke lese bildet. Prøv et JPEG- eller PNG-bilde.')}
+});
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'&&S.sheet)H.closeSheet();
+  if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.f==='custom'){e.preventDefault();H.addCustom()}
+});
+
+/* ---------- start ---------- */
+(async function(){
+  var ok=await openDB();
+  if(ok){
+    try{
+      S.items=await dbAll('items');S.outfits=await dbAll('outfits');S.wish=await dbAll('wish');
+      var metaDocs=await dbAll('meta');
+      var lb=metaDocs.filter(function(m){return m.id==='lastBackup'})[0];S.lastBackup=lb?lb.at:'';
+      S.items.forEach(function(i){i.tags=i.tags||[];i.seasons=i.seasons||[]});
+      await migrate(metaDocs.filter(function(m){return m.id==='palette'})[0],metaDocs);
+    }catch(e){S.storage=false;S.colors=DEFAULT_COLORS.map(function(c){return Object.assign({},c)})}
+  }else{S.storage=false;S.colors=DEFAULT_COLORS.map(function(c){return Object.assign({},c)})}
+  render();
+})();
+})();
+</script>
+<script>
+/* Ber nettleseren om å behandle lagringen som varig, slik at bilder og plagg ikke ryddes bort ved lite plass. */
+try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist()}catch(e){}
+</script>
+</body>
+</html>
