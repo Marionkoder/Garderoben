@@ -100,10 +100,13 @@ h2{margin:0}
 /* outfit panel */
 .panel{margin-top:6px;border-radius:10px;padding:14px;background-color:var(--panel);
   background-image:repeating-linear-gradient(90deg,rgba(247,239,218,.09) 0 1px,transparent 1px 15px);
-  display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:8px}
+}
+.pgrid{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:8px}
+.pacc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
+.slot.acc{aspect-ratio:1/.95}
 .slot{position:relative;aspect-ratio:1/1.1;border:1.5px dashed rgba(247,239,218,.6);border-radius:6px;background:transparent;color:var(--chalk);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:500 12.5px/1.25 var(--body);text-align:center;padding:6px;cursor:pointer;overflow:hidden}
-.slot.tall{grid-row:span 2;aspect-ratio:auto;align-self:stretch;min-height:0}
+.slot.tall{grid-row:span 2;aspect-ratio:1/2.2;align-self:stretch;min-height:0}
 .slot.coat{grid-row:1/4;aspect-ratio:auto;align-self:stretch;min-height:0}
 .slot.filled{border:1.5px solid var(--chalk);padding:0;background:var(--mount);display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0}
 .slot.filled .mount{flex:1 1 0;min-height:0;aspect-ratio:auto;border-radius:0;width:100%}
@@ -115,6 +118,18 @@ h2{margin:0}
 input,select,textarea{width:100%;font:400 16px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:8px;padding:11px 12px}
 textarea{resize:vertical}
 
+.ogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px;margin-top:12px}
+.ocard{background:none;border:0;padding:0;cursor:pointer;display:block;width:100%;text-align:left;color:inherit}
+.ocard:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:10px}
+.collage{display:grid;gap:4px;padding:6px;border-radius:10px;background-color:var(--panel);
+  background-image:repeating-linear-gradient(90deg,rgba(247,239,218,.09) 0 1px,transparent 1px 15px)}
+.collage .ct{position:relative;aspect-ratio:4/5;background:var(--mount);border-radius:4px;overflow:hidden}
+.collage .ct.wide{grid-column:1/-1;aspect-ratio:8/5}
+.collage .ct .mount{position:absolute;inset:0;aspect-ratio:auto;border-radius:0}
+.collage .ct .ph span{display:none}
+.olist{list-style:none;margin:16px 0 0;padding:0}
+.orow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line)}
+.sheet .collage{max-width:340px;margin:0 auto}
 .ol{list-style:none;margin:12px 0 0;padding:0}
 .of{display:grid;grid-template-columns:1fr auto;gap:8px 12px;align-items:center;padding:14px 0;border-bottom:1px solid var(--line)}
 .strip{display:flex;gap:4px;grid-column:1/-1}
@@ -264,8 +279,8 @@ input[type=range]{padding:0;border:0;background:transparent;accent-color:var(--a
 var CATS=[
   {k:'yttertoy',l:'Yttertøy'},{k:'blazer',l:'Dressjakke'},{k:'skjorte',l:'Bluse / skjorte'},
   {k:'topp',l:'Topp / t-skjorte'},{k:'genser',l:'Genser'},{k:'bukse',l:'Bukse'},
-  {k:'skjoert',l:'Skjørt'},{k:'kjole',l:'Kjole / buksedress'},{k:'sko',l:'Sko'},
-  {k:'smykker',l:'Smykker'},{k:'tilbehor',l:'Tilbehør'},{k:'belte',l:'Belte'}
+  {k:'skjoert',l:'Skjørt'},{k:'kjole',l:'Kjole / buksedress'},{k:'badetoy',l:'Badetøy'},{k:'sko',l:'Sko'},
+  {k:'smykker',l:'Smykker'},{k:'vesker',l:'Vesker'},{k:'tilbehor',l:'Tilbehør'}
 ];
 var OCCS=[{k:'formelt',l:'Formelt'},{k:'hoytidelig',l:'Høytidelig'},{k:'hverdag',l:'Hverdag'},{k:'fest',l:'Fest'},{k:'fritid',l:'Fritid og trening'}];
 var DEFAULT_COLORS=[
@@ -312,22 +327,24 @@ var SLOTS=[
   {k:'yttertoy',l:'Yttertøy',cats:['yttertoy'],coat:true},
   {k:'jakke',l:'Dressjakke',cats:['blazer']},
   {k:'overdel',l:'Bluse, genser eller topp',cats:['skjorte','genser','topp']},
-  {k:'underdel',l:'Bukse, skjørt eller kjole',cats:['bukse','skjoert','kjole'],tall:true},
-  {k:'sko',l:'Sko',cats:['sko']},
-  {k:'tilbehor',l:'Smykker og tilbehør',cats:['belte','tilbehor','smykker']}
+  {k:'underdel',l:'Bukse, skjørt, kjole eller badetøy',cats:['bukse','skjoert','kjole','badetoy'],tall:true},
+  {k:'sko',l:'Sko',cats:['sko'],tall:true},
+  {k:'smykker',l:'Smykker',cats:['smykker'],acc:true},
+  {k:'veske',l:'Veske',cats:['vesker'],acc:true},
+  {k:'tilbehor',l:'Tilbehør',cats:['tilbehor'],acc:true}
 ];
 /* rows shown under every occasion on the Mangler tab, in this order */
-var MEXCL={hverdag:['blazer'],fest:['blazer'],fritid:['blazer','smykker']}; /* rows left out unless they already hold garments */
+var MEXCL={hverdag:['blazer'],fest:['blazer'],fritid:['blazer','smykker','skjoert','kjole']}; /* rows left out unless they already hold garments */
 var MROWS=[
   {k:'yttertoy',cats:['yttertoy']},{k:'blazer',cats:['blazer']},{k:'skjorte',cats:['skjorte']},
   {k:'topp',cats:['topp']},{k:'genser',cats:['genser']},{k:'bukse',cats:['bukse']},
-  {k:'skjoert',cats:['skjoert']},{k:'kjole',cats:['kjole']},{k:'sko',cats:['sko']},
-  {k:'smykker',cats:['smykker']},{k:'tilbehor',cats:['tilbehor','belte'],label:'Tilbehør og belter'}
+  {k:'skjoert',cats:['skjoert']},{k:'kjole',cats:['kjole']},{k:'badetoy',cats:['badetoy'],only:['hverdag','fritid']},{k:'sko',cats:['sko']},
+  {k:'smykker',cats:['smykker']},{k:'vesker',cats:['vesker']},{k:'tilbehor',cats:['tilbehor']}
 ];
 
 var S={tab:'plagg',items:[],outfits:[],wish:[],colors:[],fOcc:'alle',fCat:'alle',fSeason:'alle',oSeason:'alle',oGroup:'alle',occ:'formelt',
   cur:{},curName:'',curId:null,storage:true,sheet:null,edit:null,picker:null,confirmDel:false,confirmOutfit:null,customText:'',
-  cdraft:null,colorFrom:null,editScroll:0,lastBackup:'',importData:null,mClosed:{}};
+  cdraft:null,colorFrom:null,editScroll:0,lastBackup:'',importData:null,mClosed:{},antMode:'bygg',outfitOcc:'alle',outfitView:null};
 
 /* ---------- helpers ---------- */
 function $(s){return document.querySelector(s)}
@@ -418,7 +435,7 @@ async function migrate(meta,allMeta){
   for(var i=0;i<S.items.length;i++){
     var it=S.items[i],ch=false,tags=mapOcc(it.tags);
     if(it.cat==='smoking'||it.cat==='dress'){it.cat='blazer';ch=true}
-    if(it.cat==='slips'){it.cat='tilbehor';ch=true}
+    if(it.cat==='slips'||it.cat==='belte'){it.cat='tilbehor';ch=true}
     if(tags.join()!==(it.tags||[]).join()){it.tags=tags;ch=true}
     var col=it.color==='lyseblaa'?'himmelblaa':(it.color||'');
     if(col&&keys.indexOf(col)<0)col='';
@@ -614,37 +631,75 @@ function foot(){
     '<input class="vh" type="file" id="backupFile" accept=".json,application/json" aria-label="Velg sikkerhetskopi"></section>';
 }
 
-function viewAntrekk(){
+function slotTile(s){
+  var it=byId(S.cur[s.k]),w=s.coat?' coat':(s.tall?' tall':'');
+  if(s.acc)w=' acc';
+  return it
+    ? '<button class="slot filled'+w+'" data-act="pickSlot" data-k="'+s.k+'" aria-label="'+esc(s.l)+': '+esc(it.name)+'. Bytt plagg">'+mount(it)+'<span class="nm">'+esc(it.name)+'</span></button>'
+    : '<button class="slot'+w+'" data-act="pickSlot" data-k="'+s.k+'">'+PLUS+'<span>'+s.l+'</span></button>';
+}
+function viewBuilder(){
   var n=SLOTS.filter(function(s){return byId(S.cur[s.k])}).length;
-  var tiles=SLOTS.map(function(s){
-    var it=byId(S.cur[s.k]),w=s.coat?' coat':(s.tall?' tall':'');
-    return it
-      ? '<button class="slot filled'+w+'" data-act="pickSlot" data-k="'+s.k+'" aria-label="'+esc(s.l)+': '+esc(it.name)+'. Bytt plagg">'+mount(it)+'<span class="nm">'+esc(it.name)+'</span></button>'
-      : '<button class="slot'+w+'" data-act="pickSlot" data-k="'+s.k+'">'+PLUS+'<span>'+s.l+'</span></button>';
-  }).join('');
   var h='<div class="filters"><span class="lbl" style="margin-bottom:6px">Anledning</span>'+
     '<div class="chips">'+OCCS.map(function(o){return '<button class="chip" data-act="occ" data-v="'+o.k+'" aria-pressed="'+(S.occ===o.k)+'">'+o.l+'</button>'}).join('')+'</div>'+
     '<span class="lbl" style="margin-bottom:6px">Sesong</span>'+chips(SEASONS,S.oSeason,'oSeason','Alle sesonger')+
     '<span class="lbl" style="margin-bottom:6px">Fargegruppe</span>'+chips(groupsPresent(),S.oGroup,'oGroup','Alle fargegrupper')+'</div>';
-  h+='<div class="panel">'+tiles+'</div>';
+  h+='<div class="panel"><div class="pgrid">'+SLOTS.filter(function(s){return !s.acc}).map(slotTile).join('')+'</div>'+
+     '<div class="pacc">'+SLOTS.filter(function(s){return s.acc}).map(slotTile).join('')+'</div></div>';
   h+='<div class="panel-actions"><button class="btn ghost" data-act="suggest">Foreslå antrekk</button><button class="btn ghost" data-act="clearCur"'+(n?'':' disabled')+'>Tøm</button></div>';
   h+='<label class="fld"><span>Navn på antrekket</span><input data-f="curName" value="'+esc(S.curName)+'" placeholder="f.eks. Styremøte eller bryllup i juni" autocomplete="off"></label>';
-  h+='<div class="row"><button class="btn" data-act="saveOutfit">'+(S.curId?'Oppdater antrekk':'Lagre antrekk')+'</button>'+(S.curId?'<button class="btn ghost" data-act="newOutfit">Nytt antrekk</button>':'')+'</div>';
-
-  var outs=S.outfits.slice().sort(function(a,b){return b.created-a.created});
-  h+='<h2 class="grp">Lagrede antrekk</h2>';
-  if(!outs.length){
-    h+='<p class="lead">Ingen antrekk ennå. Velg plagg i hver rute over og lagre kombinasjonen.</p>';
-  }else{
-    h+='<ul class="ol">'+outs.map(function(o){
-      var th=SLOTS.map(function(s){return byId(o.slots[s.k])}).filter(Boolean).map(function(i){return '<span class="th">'+mount(i)+'</span>'}).join('');
-      return '<li class="of"><div class="oi"><strong>'+esc(o.name)+'</strong><span class="meta">'+esc(occL(o.occ))+'</span></div>'+
-        '<div class="oa"><button class="sm" data-act="openOutfit" data-id="'+o.id+'">Åpne</button>'+
-        '<button class="sm danger" data-act="delOutfit" data-id="'+o.id+'">'+(S.confirmOutfit===o.id?'Sikker?':'Slett')+'</button></div>'+
-        '<div class="strip">'+th+'</div></li>';
-    }).join('')+'</ul>';
-  }
+  h+='<div class="row"><button class="btn" data-act="saveOutfit">'+(S.curId?'Oppdater antrekk':'Lagre antrekk')+'</button>'+
+     (S.curId?'<button class="btn ghost" data-act="newOutfit">Nytt antrekk</button>':'')+
+     (S.outfits.length?'<button class="btn ghost" data-act="antMode" data-v="vis">Se mine antrekk</button>':'')+'</div>';
   return h;
+}
+/* an outfit as a collection of pictures: no text until it is tapped */
+function collageHTML(o){
+  var its=SLOTS.map(function(s){return byId(o.slots[s.k])}).filter(Boolean),n=its.length;
+  if(!n)return '<div class="collage" style="grid-template-columns:1fr"><div class="ct"></div></div>';
+  var cols=n===1?1:(n<=4?2:3);
+  return '<div class="collage" style="grid-template-columns:repeat('+cols+',1fr)">'+its.map(function(i,ix){
+    var wide=(cols===2&&n%2===1&&ix===n-1);
+    return '<div class="ct'+(wide?' wide':'')+'">'+mount(i)+'</div>';
+  }).join('')+'</div>';
+}
+function viewOutfits(){
+  var h='<div class="filters">'+chips(OCCS,S.outfitOcc,'outfitOcc','Alle anledninger')+'</div>';
+  if(!S.outfits.length){
+    return h+'<section class="empty"><h2>Ingen antrekk ennå</h2><p>Sett sammen plagg i byggeren og lagre kombinasjonen. Den dukker opp her som en bildesamling.</p><button class="btn" data-act="antMode" data-v="bygg">Bygg et antrekk</button></section>';
+  }
+  var list=S.outfits.filter(function(o){return S.outfitOcc==='alle'||o.occ===S.outfitOcc});
+  if(!list.length)return h+'<p class="lead">Ingen antrekk for denne anledningen ennå.</p>';
+  function card(o){return '<button class="ocard" data-act="openOutfitView" data-id="'+o.id+'" aria-label="'+esc(o.name)+', '+esc(occL(o.occ))+'">'+collageHTML(o)+'</button>'}
+  function byName(a,b){return String(a.name).localeCompare(String(b.name),'nb')}
+  if(S.outfitOcc!=='alle')return h+'<div class="ogrid">'+list.sort(byName).map(card).join('')+'</div>';
+  OCCS.forEach(function(oc){
+    var arr=list.filter(function(o){return o.occ===oc.k}).sort(byName);
+    if(arr.length)h+='<h2 class="grp2">'+esc(oc.l)+'<span class="cnt">'+arr.length+'</span></h2><div class="ogrid">'+arr.map(card).join('')+'</div>';
+  });
+  var rest=list.filter(function(o){return !OCCS.some(function(oc){return oc.k===o.occ})});
+  if(rest.length)h+='<h2 class="grp2">Uten anledning<span class="cnt">'+rest.length+'</span></h2><div class="ogrid">'+rest.sort(byName).map(card).join('')+'</div>';
+  return h;
+}
+function viewAntrekk(){
+  var modes='<div class="chips"><button class="chip" data-act="antMode" data-v="vis" aria-pressed="'+(S.antMode==='vis')+'">Mine antrekk ('+S.outfits.length+')</button>'+
+    '<button class="chip" data-act="antMode" data-v="bygg" aria-pressed="'+(S.antMode!=='vis')+'">Bygg antrekk</button></div>';
+  return modes+(S.antMode==='vis'?viewOutfits():viewBuilder());
+}
+function outfitHTML(){
+  var o=S.outfits.filter(function(x){return x.id===S.outfitView})[0];
+  if(!o)return '';
+  var rows=SLOTS.map(function(s){return byId(o.slots[s.k])}).filter(Boolean).map(function(i){
+    return '<li class="orow"><span class="th">'+mount(i)+'</span><span><b>'+esc(i.name)+'</b><br><span class="meta">'+esc(catL(i.cat))+(i.brand?', '+esc(i.brand):'')+'</span></span></li>';
+  }).join('');
+  return '<div class="scrim" data-act="closeSheet"></div>'+
+  '<div class="sheet enter" role="dialog" aria-modal="true" aria-labelledby="st" tabindex="-1">'+
+    '<div class="sheet-h"><h2 id="st">'+esc(o.name)+'</h2><button class="x" data-act="closeSheet" aria-label="Lukk">'+CLOSE+'</button></div>'+
+    '<p class="meta" style="margin:4px 0 12px">'+esc(occL(o.occ)||'Uten anledning')+'</p>'+
+    collageHTML(o)+
+    '<ul class="olist">'+rows+'</ul>'+
+    '<div class="row"><button class="btn" data-act="openOutfit" data-id="'+o.id+'">Åpne i byggeren</button>'+
+    '<button class="btn danger" data-act="delOutfitSheet">'+(S.confirmDel?'Trykk igjen for å slette':'Slett')+'</button></div></div>';
 }
 
 function wishOf(id){return S.wish.filter(function(w){return w.id===id})[0]}
@@ -660,7 +715,12 @@ function viewMangler(){
         .sort(function(a,b){return String(a.name).localeCompare(String(b.name),'nb')});
       return {r:r,id:id,w:w,items:items,label:r.label||catL(r.k),skipped:!!(w&&w.kind==='skip')};
     });
-    rows=rows.filter(function(r){return !(MEXCL[o.k]&&MEXCL[o.k].indexOf(r.r.k)>-1&&!r.items.length)});
+    rows=rows.filter(function(r){
+      if(r.items.length)return true;
+      if(MEXCL[o.k]&&MEXCL[o.k].indexOf(r.r.k)>-1)return false;
+      if(r.r.only&&r.r.only.indexOf(o.k)<0)return false;
+      return true;
+    });
     var act=rows.filter(function(r){return !r.skipped}),have=act.filter(function(r){return r.items.length}).length;
     h+='<section class="occ"><h2 class="grp"><button class="occ-h" data-act="toggleOcc" data-v="'+o.k+'" aria-expanded="'+open+'">'+esc(o.l)+'<span class="chev'+(open?' open':'')+'">'+CHEV+'</span></button></h2>'+
       '<div class="stitch" aria-hidden="true">'+act.map(function(r){return '<i class="'+(r.items.length?'on':'')+'"></i>'}).join('')+'</div>'+
@@ -805,13 +865,13 @@ function renderSheet(keep,st0){
   var root=$('#sheetRoot'),old=root.querySelector('.sheet'),st=(st0!=null)?st0:((keep&&old)?old.scrollTop:0);
   if(!S.sheet){root.innerHTML='';document.body.style.overflow='';return}
   S.keep=!!keep;
-  root.innerHTML=S.sheet==='edit'?editHTML():S.sheet==='color'?colorHTML():S.sheet==='import'?importHTML():pickHTML();
+  root.innerHTML=S.sheet==='edit'?editHTML():S.sheet==='color'?colorHTML():S.sheet==='import'?importHTML():S.sheet==='outfit'?outfitHTML():pickHTML();
   document.body.style.overflow='hidden';
   var sh=root.querySelector('.sheet');
   sh.scrollTop=st;
   if(!keep) sh.focus({preventScroll:true});
 }
-function closeSheet(){S.sheet=null;S.edit=null;S.picker=null;S.importData=null;S.confirmDel=false;renderSheet()}
+function closeSheet(){S.sheet=null;S.edit=null;S.picker=null;S.importData=null;S.outfitView=null;S.confirmDel=false;renderSheet()}
 
 function importHTML(){
   var d=S.importData,n=d.items.length,o=(d.outfits||[]).length,c=(d.colors||[]).length;
@@ -843,7 +903,7 @@ function readFileText(file){
 function normImported(it){
   it.tags=mapOcc(it.tags||[]);it.seasons=it.seasons||[];
   if(it.cat==='smoking'||it.cat==='dress')it.cat='blazer';
-  if(it.cat==='slips')it.cat='tilbehor';
+  if(it.cat==='slips'||it.cat==='belte')it.cat='tilbehor';
   return it;
 }
 function mergeBy(cur,inc,key){
@@ -935,7 +995,9 @@ function suggest(){
     if((p=pool(['skjorte','genser','topp'])).length) out.overdel=rnd(p).id;
   }
   if((p=pool(['sko'])).length) out.sko=rnd(p).id;
-  if((p=pool(['belte','tilbehor','smykker'])).length) out.tilbehor=rnd(p).id;
+  if((p=pool(['smykker'])).length) out.smykker=rnd(p).id;
+  if((p=pool(['vesker'])).length) out.veske=rnd(p).id;
+  if((p=pool(['tilbehor'])).length) out.tilbehor=rnd(p).id;
   S.cur=out;S.curId=null;render();
 }
 
@@ -1063,6 +1125,16 @@ var H={
     closeSheet();render();await del('items',id);toast('Plagget er slettet');
   },
   occ:function(d){S.occ=d.v;render()},
+  antMode:function(d){S.antMode=d.v;render();window.scrollTo(0,0)},
+  outfitOcc:function(d){S.outfitOcc=d.v;render()},
+  openOutfitView:function(d){S.outfitView=d.id;S.confirmDel=false;S.sheet='outfit';renderSheet(false)},
+  delOutfitSheet:async function(){
+    if(!S.confirmDel){S.confirmDel=true;renderSheet(true);return}
+    var id=S.outfitView;
+    S.outfits=S.outfits.filter(function(x){return x.id!==id});
+    if(S.curId===id)S.curId=null;
+    closeSheet();render();await del('outfits',id);toast('Antrekket er slettet');
+  },
   toggleOcc:function(d){S.mClosed[d.v]=!S.mClosed[d.v];render()},
   oSeason:function(d){S.oSeason=d.v;render()},
   oGroup:function(d){S.oGroup=d.v;render()},
@@ -1094,7 +1166,7 @@ var H={
   },
   openOutfit:function(d){
     var o=S.outfits.filter(function(x){return x.id===d.id})[0];if(!o)return;
-    S.cur=Object.assign({},o.slots);S.curName=o.name;S.curId=o.id;S.occ=o.occ;S.confirmOutfit=null;render();window.scrollTo(0,0);
+    S.cur=Object.assign({},o.slots);S.curName=o.name;S.curId=o.id;S.occ=o.occ;S.confirmOutfit=null;S.antMode='bygg';closeSheet();render();window.scrollTo(0,0);
   },
   delOutfit:async function(d){
     if(S.confirmOutfit!==d.id){S.confirmOutfit=d.id;render();return}
@@ -1176,6 +1248,7 @@ document.addEventListener('keydown',function(e){
       await migrate(metaDocs.filter(function(m){return m.id==='palette'})[0],metaDocs);
     }catch(e){S.storage=false;S.colors=DEFAULT_COLORS.map(function(c){return Object.assign({},c)})}
   }else{S.storage=false;S.colors=DEFAULT_COLORS.map(function(c){return Object.assign({},c)})}
+  S.antMode=S.outfits.length?'vis':'bygg';
   render();
 })();
 })();
