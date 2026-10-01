@@ -129,6 +129,15 @@ textarea{resize:vertical}
 .stitch i{flex:1;height:3px;border-radius:2px;background:var(--line)}
 .stitch i.on{background:var(--accent)}
 .prog{color:var(--muted);font-size:13px;margin:0}
+.occ-h{background:none;border:0;padding:0;font:inherit;color:inherit;display:flex;align-items:center;gap:6px;cursor:pointer;text-align:left}
+.chev{display:inline-grid;transition:transform .15s}
+.chev.open{transform:rotate(180deg)}
+.thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
+.tb{background:none;border:0;padding:0;width:56px;cursor:pointer;border-radius:4px;color:inherit}
+.tb .mount{border-radius:4px;padding:0}
+.tb .ph span{display:none}
+.tb.add{aspect-ratio:4/5;border:1.5px dashed var(--muted);color:var(--muted);display:grid;place-items:center}
+.el .cnt{margin-left:8px}
 .ess-list{list-style:none;margin:8px 0 0;padding:0}
 .ess{display:grid;grid-template-columns:26px 1fr;gap:10px;padding:13px 0;border-bottom:1px solid var(--line)}
 .ess svg{margin-top:1px}
@@ -251,10 +260,10 @@ input[type=range]{padding:0;border:0;background:transparent;accent-color:var(--a
 
 /* ---------- data ---------- */
 var CATS=[
-  {k:'blazer',l:'Blazer / jakke'},{k:'skjorte',l:'Skjorte / bluse'},{k:'genser',l:'Genser'},{k:'topp',l:'Topp / t-skjorte'},
-  {k:'bukse',l:'Bukse / skjørt'},{k:'kjole',l:'Kjole / buksedress'},
-{k:'sko',l:'Sko'},{k:'belte',l:'Belte'},
-  {k:'yttertoy',l:'Yttertøy'},{k:'tilbehor',l:'Tilbehør'}
+  {k:'yttertoy',l:'Yttertøy'},{k:'blazer',l:'Dressjakke'},{k:'skjorte',l:'Bluse / skjorte'},
+  {k:'topp',l:'Topp / t-skjorte'},{k:'genser',l:'Genser'},{k:'bukse',l:'Bukse'},
+  {k:'skjoert',l:'Skjørt'},{k:'kjole',l:'Kjole / buksedress'},{k:'sko',l:'Sko'},
+  {k:'smykker',l:'Smykker'},{k:'tilbehor',l:'Tilbehør'},{k:'belte',l:'Belte'}
 ];
 var OCCS=[{k:'formelt',l:'Formelt'},{k:'hoytidelig',l:'Høytidelig'},{k:'hverdag',l:'Hverdag'},{k:'fest',l:'Fest'},{k:'fritid',l:'Fritid og trening'}];
 var DEFAULT_COLORS=[
@@ -299,35 +308,23 @@ function sortedColors(){
 }
 var SLOTS=[
   {k:'yttertoy',l:'Yttertøy',cats:['yttertoy'],coat:true},
-  {k:'jakke',l:'Blazer eller jakke',cats:['blazer']},
-  {k:'overdel',l:'Skjorte, genser eller topp',cats:['skjorte','genser','topp']},
-  {k:'underdel',l:'Bukse, skjørt eller kjole',cats:['bukse','kjole'],tall:true},
+  {k:'jakke',l:'Dressjakke',cats:['blazer']},
+  {k:'overdel',l:'Bluse, genser eller topp',cats:['skjorte','genser','topp']},
+  {k:'underdel',l:'Bukse, skjørt eller kjole',cats:['bukse','skjoert','kjole'],tall:true},
   {k:'sko',l:'Sko',cats:['sko']},
-  {k:'tilbehor',l:'Belte og tilbehør',cats:['belte','tilbehor']}
+  {k:'tilbehor',l:'Smykker og tilbehør',cats:['belte','tilbehor','smykker']}
 ];
-var ESS=[
-  {k:'formelt',l:'Formelt',items:[
-    {k:'kjole',l:'Kjole eller buksedress',cats:['kjole']},
-    {k:'blazer',l:'Blazer eller jakke',cats:['blazer']},
-    {k:'skjorte',l:'Skjorte eller bluse',cats:['skjorte']},
-    {k:'genser',l:'Genser',cats:['genser']},
-    {k:'bukse',l:'Bukse eller skjørt',cats:['bukse']},
-    {k:'sko',l:'Lærsko',cats:['sko']},
-    {k:'belte',l:'Belte',cats:['belte']},
-    {k:'frakk',l:'Frakk eller kåpe',cats:['yttertoy']}
-  ]},
-  {k:'hoytidelig',l:'Høytidelig',items:[
-    {k:'drakt',l:'Kjole eller buksedress',cats:['kjole']},
-    {k:'skjorte',l:'Pen skjorte eller bluse',cats:['skjorte']},
-    {k:'sko',l:'Pene sko',cats:['sko']},
-    {k:'tilb',l:'Lommetørkle, smykker eller veske',cats:['tilbehor']},
-    {k:'aften',l:'Aftenfrakk eller kåpe',cats:['yttertoy']}
-  ]}
+/* rows shown under every occasion on the Mangler tab, in this order */
+var MROWS=[
+  {k:'yttertoy',cats:['yttertoy']},{k:'blazer',cats:['blazer']},{k:'skjorte',cats:['skjorte']},
+  {k:'topp',cats:['topp']},{k:'genser',cats:['genser']},{k:'bukse',cats:['bukse']},
+  {k:'skjoert',cats:['skjoert']},{k:'kjole',cats:['kjole']},{k:'sko',cats:['sko']},
+  {k:'smykker',cats:['smykker']},{k:'tilbehor',cats:['tilbehor','belte'],label:'Tilbehør og belter'}
 ];
 
 var S={tab:'plagg',items:[],outfits:[],wish:[],colors:[],fOcc:'alle',fCat:'alle',fSeason:'alle',oSeason:'alle',oGroup:'alle',occ:'formelt',
   cur:{},curName:'',curId:null,storage:true,sheet:null,edit:null,picker:null,confirmDel:false,confirmOutfit:null,customText:'',
-  cdraft:null,colorFrom:null,editScroll:0,lastBackup:'',importData:null};
+  cdraft:null,colorFrom:null,editScroll:0,lastBackup:'',importData:null,mClosed:{}};
 
 /* ---------- helpers ---------- */
 function $(s){return document.querySelector(s)}
@@ -613,38 +610,45 @@ function viewAntrekk(){
 function wishOf(id){return S.wish.filter(function(w){return w.id===id})[0]}
 
 function viewMangler(){
-  var h='<p class="lead">Et plagg teller når det er merket med riktig anledning. Hopp over det som ikke passer for deg.</p>';
-  ESS.forEach(function(g){
-    var rows=g.items.map(function(e){
-      var id=g.k+':'+e.k,w=wishOf(id);
-      var found=S.items.filter(function(i){
-        return i.tags.indexOf(g.k)>-1&&e.cats.indexOf(i.cat)>-1&&(!e.colors||e.colors.indexOf(i.color)>-1);
-      })[0];
-      return {e:e,id:id,w:w,found:found,skipped:!!(w&&w.kind==='skip')};
+  var h='<p class="lead">Under hver anledning ser du plaggene dine i hver kategori. Et plagg vises under en anledning når det er merket med den. Hopp over kategorier som ikke passer for deg.</p>';
+  var CHEV='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
+  OCCS.forEach(function(o){
+    var open=!S.mClosed[o.k];
+    var rows=MROWS.map(function(r){
+      var id=o.k+':'+r.k,w=wishOf(id);
+      var items=S.items.filter(function(i){return i.tags.indexOf(o.k)>-1&&r.cats.indexOf(i.cat)>-1})
+        .sort(function(a,b){return String(a.name).localeCompare(String(b.name),'nb')});
+      return {r:r,id:id,w:w,items:items,label:r.label||catL(r.k),skipped:!!(w&&w.kind==='skip')};
     });
-    var act=rows.filter(function(r){return !r.skipped}),have=act.filter(function(r){return r.found}).length;
-    h+='<section><h2 class="grp">'+g.l+'</h2>'+
-      '<div class="stitch" aria-hidden="true">'+act.map(function(r){return '<i class="'+(r.found?'on':'')+'"></i>'}).join('')+'</div>'+
-      '<p class="prog">'+have+' av '+act.length+' på plass</p><ul class="ess-list">';
-    rows.forEach(function(r){
-      var a='data-g="'+g.k+'" data-e="'+r.e.k+'"',body,mark;
-      if(r.skipped){
-        mark='';
-        body='<span class="el muted strike">'+r.e.l+'</span><div class="ra"><button class="sm" data-act="unskip" '+a+'>Angre</button></div>';
-      }else if(r.found){
-        mark=CHECK;
-        body='<span class="el">'+r.e.l+'</span><span class="ef">'+mount(r.found)+'<span>'+esc(r.found.name)+'</span></span>';
-      }else{
-        mark=OPEN;
-        var on=r.w&&r.w.kind==='want';
-        body='<span class="el">'+r.e.l+'</span><div class="ra">'+
-          '<button class="sm" data-act="addFor" '+a+'>Legg til plagg</button>'+
-          '<button class="sm" data-act="want" aria-pressed="'+(!!on)+'" '+a+'>'+(on?'På ønskelisten':'Ønskeliste')+'</button>'+
-          '<button class="sm" data-act="skip" '+a+'>Hopp over</button></div>';
-      }
-      h+='<li class="ess"><span>'+mark+'</span><div>'+body+'</div></li>';
-    });
-    h+='</ul></section>';
+    var act=rows.filter(function(r){return !r.skipped}),have=act.filter(function(r){return r.items.length}).length;
+    h+='<section class="occ"><h2 class="grp"><button class="occ-h" data-act="toggleOcc" data-v="'+o.k+'" aria-expanded="'+open+'">'+esc(o.l)+'<span class="chev'+(open?' open':'')+'">'+CHEV+'</span></button></h2>'+
+      '<div class="stitch" aria-hidden="true">'+act.map(function(r){return '<i class="'+(r.items.length?'on':'')+'"></i>'}).join('')+'</div>'+
+      '<p class="prog">'+have+' av '+act.length+' kategorier har plagg</p>';
+    if(open){
+      h+='<ul class="ess-list">';
+      rows.forEach(function(r){
+        var a='data-g="'+o.k+'" data-e="'+r.r.k+'"',body,mark;
+        if(r.skipped){
+          mark='';
+          body='<span class="el muted strike">'+esc(r.label)+'</span><div class="ra"><button class="sm" data-act="unskip" '+a+'>Angre</button></div>';
+        }else if(r.items.length){
+          mark=CHECK;
+          body='<span class="el">'+esc(r.label)+'<span class="cnt">'+r.items.length+'</span></span><div class="thumbs">'+
+            r.items.map(function(i){return '<button class="tb" data-act="openItem" data-id="'+i.id+'" aria-label="'+esc(i.name)+'" title="'+esc(i.name)+'">'+mount(i)+'</button>'}).join('')+
+            '<button class="tb add" data-act="addFor" '+a+' aria-label="Legg til plagg i '+esc(r.label)+'">'+PLUS+'</button></div>';
+        }else{
+          mark=OPEN;
+          var on=r.w&&r.w.kind==='want';
+          body='<span class="el">'+esc(r.label)+'</span><div class="ra">'+
+            '<button class="sm" data-act="addFor" '+a+'>Legg til plagg</button>'+
+            '<button class="sm" data-act="want" aria-pressed="'+(!!on)+'" '+a+'>'+(on?'På ønskelisten':'Ønskeliste')+'</button>'+
+            '<button class="sm" data-act="skip" '+a+'>Hopp over</button></div>';
+        }
+        h+='<li class="ess"><span>'+mark+'</span><div>'+body+'</div></li>';
+      });
+      h+='</ul>';
+    }
+    h+='</section>';
   });
   var wl=S.wish.filter(function(w){return w.kind!=='skip'});
   h+='<h2 class="grp">Ønskeliste</h2>';
@@ -879,14 +883,14 @@ function suggest(){
   }
   var noShirt=false;
   if(!out.underdel){
-    var u=pool(['bukse','kjole']);
+    var u=pool(['bukse','skjoert','kjole']);
     if(u.length){var pick=rnd(u);out.underdel=pick.id;if(pick.cat==='kjole')noShirt=true}
   }
   if(!noShirt){
     if((p=pool(['skjorte','genser','topp'])).length) out.overdel=rnd(p).id;
   }
   if((p=pool(['sko'])).length) out.sko=rnd(p).id;
-  if((p=pool(['belte','tilbehor'])).length) out.tilbehor=rnd(p).id;
+  if((p=pool(['belte','tilbehor','smykker'])).length) out.tilbehor=rnd(p).id;
   S.cur=out;S.curId=null;render();
 }
 
@@ -1001,6 +1005,7 @@ var H={
     closeSheet();render();await del('items',id);toast('Plagget er slettet');
   },
   occ:function(d){S.occ=d.v;render()},
+  toggleOcc:function(d){S.mClosed[d.v]=!S.mClosed[d.v];render()},
   oSeason:function(d){S.oSeason=d.v;render()},
   oGroup:function(d){S.oGroup=d.v;render()},
   clearOFilters:function(){S.oSeason='alle';S.oGroup='alle';render();renderSheet(true)},
@@ -1040,14 +1045,13 @@ var H={
     S.confirmOutfit=null;render();await del('outfits',d.id);toast('Antrekket er slettet');
   },
   addFor:function(d){
-    var g=ESS.filter(function(x){return x.k===d.g})[0],e=g.items.filter(function(x){return x.k===d.e})[0];
-    openEdit(null,{cat:e.cats[0],tag:g.k,color:e.colors?e.colors[0]:undefined});
+    openEdit(null,{cat:d.e,tag:d.g});
   },
   want:async function(d){
     var id=d.g+':'+d.e,ex=wishOf(id);
     if(ex&&ex.kind==='want'){S.wish=S.wish.filter(function(w){return w.id!==id});render();await del('wish',id);return}
-    var g=ESS.filter(function(x){return x.k===d.g})[0],e=g.items.filter(function(x){return x.k===d.e})[0];
-    var w={id:id,kind:'want',text:g.l+': '+e.l};
+    var row=MROWS.filter(function(x){return x.k===d.e})[0];
+    var w={id:id,kind:'want',text:occL(d.g)+': '+((row&&row.label)||catL(d.e))};
     S.wish=S.wish.filter(function(x){return x.id!==id}).concat([w]);render();await save('wish',w);toast('Lagt på ønskelisten');
   },
   skip:async function(d){
