@@ -193,6 +193,8 @@ textarea{resize:vertical}
 input[type=range]{padding:0;border:0;background:transparent;accent-color:var(--accent)}
 .photo .mount.tapmode{outline:3px solid var(--accent);outline-offset:2px}
 .photo img.tapping{cursor:crosshair}
+.photo img.painting{cursor:crosshair;touch-action:none}
+.photo .paintcv{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 .sw{display:flex;flex-wrap:wrap;gap:10px}
 .sw button{width:36px;height:36px;border-radius:50%;border:1px solid rgba(0,0,0,.28);cursor:pointer;padding:0}
 .sw button[aria-pressed="true"]{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--ink)}
@@ -342,7 +344,7 @@ var MROWS=[
   {k:'smykker',cats:['smykker']},{k:'vesker',cats:['vesker']},{k:'tilbehor',cats:['tilbehor']}
 ];
 
-var S={tab:'plagg',items:[],outfits:[],wish:[],colors:[],fOcc:'alle',fCat:'alle',fSeason:'alle',oSeason:'alle',oGroup:'alle',occ:'formelt',
+var S={tab:'plagg',items:[],outfits:[],wish:[],colors:[],fOcc:'alle',fCat:'alle',fSeason:'alle',fGroup:'alle',oSeason:'alle',oGroup:'alle',occ:'formelt',
   cur:{},curName:'',curId:null,storage:true,sheet:null,edit:null,picker:null,confirmDel:false,confirmOutfit:null,customText:'',
   cdraft:null,colorFrom:null,editScroll:0,lastBackup:'',importData:null,mClosed:{},antMode:'bygg',outfitOcc:'alle',outfitView:null};
 
@@ -547,7 +549,19 @@ function cleanBg(d,w,h,tol,opts){
   for(var m2=0;m2<N;m2++){if(mask[m2]){var kk=m2*4;d[kk]=CR;d[kk+1]=CG;d[kk+2]=CB}}
   return coverage;
 }
-function creamBg(dataUrl,tol,opts){
+/* hand-drawn strokes in cream, stored as normalised points so they can always be undone */
+function drawStrokes(x,w,h,strokes){
+  x.fillStyle='#ede2c8';x.strokeStyle='#ede2c8';x.lineCap='round';x.lineJoin='round';
+  strokes.forEach(function(st){
+    var R=st.r*w;
+    if(!st.pts||!st.pts.length)return;
+    if(st.pts.length===1){x.beginPath();x.arc(st.pts[0][0]*w,st.pts[0][1]*h,R,0,Math.PI*2);x.fill();return}
+    x.lineWidth=2*R;x.beginPath();x.moveTo(st.pts[0][0]*w,st.pts[0][1]*h);
+    for(var i=1;i<st.pts.length;i++)x.lineTo(st.pts[i][0]*w,st.pts[i][1]*h);
+    x.stroke();
+  });
+}
+function composeImage(dataUrl,o){
   return new Promise(function(res,rej){
     var im=new Image();
     im.onerror=function(){rej(new Error('img'))};
@@ -555,30 +569,41 @@ function creamBg(dataUrl,tol,opts){
       var w=im.width,h=im.height,c=document.createElement('canvas');
       c.width=w;c.height=h;
       var x=c.getContext('2d');x.drawImage(im,0,0);
-      var id=x.getImageData(0,0,w,h),cov=cleanBg(id.data,w,h,tol,opts);
-      if(cov<0.02){res('none');return}
-      if(cov>0.93){res('toomuch');return}
-      x.putImageData(id,0,0);
-      res(c.toDataURL('image/jpeg',0.92));
+      var status='ok',strokes=o.strokes||[];
+      if(o.cream){
+        var id=x.getImageData(0,0,w,h),cov=cleanBg(id.data,w,h,o.tol,{holes:o.holes,seeds:o.seeds});
+        if(cov<0.02)status='none';else if(cov>0.93)status='toomuch';else x.putImageData(id,0,0);
+      }
+      drawStrokes(x,w,h,strokes);
+      var untouched=(status!=='ok'&&!strokes.length);
+      res({url:untouched?dataUrl:c.toDataURL('image/jpeg',0.92),status:status});
     };
     im.src=dataUrl;
   });
 }
 var bgToken=0,bgTimer=null;
-function bgOpts(){return {holes:S.edit.holes!==false,seeds:S.edit.seeds||[]}}
-async function reprocessBg(){
-  var e=S.edit;if(!e||e.bg!=='krem'||!e.imgOrig)return;
-  var my=++bgToken;
+async function reprocessImg(){
+  var e=S.edit;if(!e||!e.imgOrig)return;
+  var my=++bgToken,strokes=e.strokes||[];
   try{
-    var r=await creamBg(e.imgOrig,e.tol,bgOpts());
+    var r;
+    if(e.bg!=='krem'&&!strokes.length)r={url:e.imgOrig,status:'ok'};
+    else r=await composeImage(e.imgOrig,{cream:e.bg==='krem',tol:e.tol,holes:e.holes!==false,seeds:e.seeds||[],strokes:strokes});
     if(my!==bgToken||S.edit!==e)return;
-    var out=(r==='none'||r==='toomuch')?e.imgOrig:r;
-    e.img=out;var im=document.querySelector('.photo .mount img');if(im)im.src=out;
+    e.img=r.url;var im=document.querySelector('.photo .mount img');if(im)im.src=r.url;
   }catch(err){}
 }
 function scheduleBg(){
   clearTimeout(bgTimer);
-  bgTimer=setTimeout(reprocessBg,140);
+  bgTimer=setTimeout(reprocessImg,140);
+}
+function paintHTML(e){
+  var n=(e.strokes||[]).length;
+  return '<div class="fld"><span class="lbl">Rydd opp i bildet</span><div class="chips wrap-chips">'+
+    '<button class="chip" data-act="paintToggle" aria-pressed="'+(!!e.paintMode)+'">Tegn med krem</button>'+
+    (n?'<button class="chip" data-act="strokeUndo">Angre siste strek ('+n+')</button>':'')+'</div>'+
+    (e.paintMode?'<label class="rng"><span>Penselstørrelse</span><input type="range" min="1" max="20" step="0.5" value="'+(e.brush||6)+'" data-f="brush" aria-label="Penselstørrelse"></label>':'')+
+    '<p class="hint">'+(e.paintMode?'Tegn eller prikk på støyen med fingeren, så blir bildet kremfarget der du tegner. Du kan angre strek for strek.':'Tegn over støy, flekker eller rester med kremfarge. Strekene ligger oppå bildet og kan angres.')+'</p></div>';
 }
 
 /* ---------- views ---------- */
@@ -590,13 +615,14 @@ function chips(list,cur,act,allLabel,wrap){
 }
 
 function viewPlagg(){
+  if(S.fGroup!=='alle'&&!groupsPresent().some(function(g){return g.k===S.fGroup}))S.fGroup='alle';
   if(!S.items.length){
     return '<section class="empty"><h2>Start med ett plagg</h2><p>Ta et bilde av en blazer, en kjole eller et par sko. Merk plagget med anledning, så kan du bygge antrekk og se hva som mangler.</p><button class="btn" data-act="newItem">Legg til plagg</button></section>'+foot();
   }
   var list=S.items.filter(function(i){
-    return (S.fOcc==='alle'||i.tags.indexOf(S.fOcc)>-1)&&(S.fCat==='alle'||i.cat===S.fCat)&&seasonMatch(i,S.fSeason);
+    return (S.fOcc==='alle'||i.tags.indexOf(S.fOcc)>-1)&&(S.fCat==='alle'||i.cat===S.fCat)&&seasonMatch(i,S.fSeason)&&(S.fGroup==='alle'||colorGroupOf(i)===S.fGroup);
   });
-  var h='<div class="filters">'+chips(OCCS,S.fOcc,'fOcc','Alle anledninger')+chips(CATS,S.fCat,'fCat','Alle typer')+chips(SEASONS,S.fSeason,'fSeason','Alle sesonger')+'</div>';
+  var h='<div class="filters">'+chips(OCCS,S.fOcc,'fOcc','Alle anledninger')+chips(CATS,S.fCat,'fCat','Alle typer')+chips(SEASONS,S.fSeason,'fSeason','Alle sesonger')+chips(groupsPresent(),S.fGroup,'fGroup','Alle fargegrupper')+'</div>';
   function card(i){
     var c=colObj(i.color);
     var tg=i.tags.length?i.tags.map(occL).join(', '):'Ikke merket med anledning';
@@ -788,7 +814,7 @@ function render(){
 function editHTML(){
   var e=S.edit,isNew=!e.id;
   var photo=e.img
-    ? '<div class="photo"><div class="mount'+(e.tapMode?' tapmode':'')+'"><img src="'+e.img+'" alt="Bilde av plagget"'+(e.tapMode?' data-act="photoTap" class="tapping"':'')+'></div></div><button class="sm swap" data-act="pickFile">Bytt bilde</button>'
+    ? '<div class="photo"><div class="mount'+((e.tapMode||e.paintMode)?' tapmode':'')+'"><img src="'+e.img+'" alt="Bilde av plagget"'+(e.tapMode?' data-act="photoTap" class="tapping"':(e.paintMode?' class="painting"':''))+'></div></div><button class="sm swap" data-act="pickFile">Bytt bilde</button>'
     : '<label class="photo photo-empty" for="file"><span><b>Legg til bilde</b>Ta et bilde eller velg fra biblioteket</span></label>';
   var sw=sortedColors().map(function(c){
     return '<button style="background:'+esc(c.hex)+'" data-act="setColor" data-v="'+esc(c.k)+'" aria-pressed="'+(e.color===c.k)+'" aria-label="'+esc(c.l)+'" title="'+esc(c.l)+'"></button>';
@@ -817,6 +843,7 @@ function editHTML(){
         ((e.seeds||[]).length?'<button class="chip" data-act="bgUndoSeed">Angre siste fylling</button>':'')+'</div>'+
       '<p class="hint">'+(e.tapMode?'Trykk på delen av bakgrunnen som ikke ble krem. Du kan trykke flere ganger, og trykke på «Trykk for å fylle» igjen når du er ferdig.':'Bakgrunnen som henger sammen med bildekanten byttes ut, og plaggets farger røres ikke. «Fyll lukkede områder» tar også bitene som er innrammet av for eksempel stropper. Øk følsomheten hvis det er hvite rester, og senk den hvis plagget selv blir spist opp.')+'</p>':'')+
       '</div>':'')+
+    (e.img?paintHTML(e):'')+
     '<label class="fld"><span>Navn</span><input data-f="name" value="'+esc(e.name)+'" placeholder="f.eks. Marineblå ullblazer" autocomplete="off"></label>'+
     '<label class="fld"><span>Type</span><select data-f="cat">'+opts+'</select></label>'+
     '<div class="fld"><span class="lbl">'+(cl.none?'Farge: ingen valgt':'Farge: '+esc(cl.l))+'</span><div class="sw">'+sw+'</div></div>'+
@@ -967,8 +994,8 @@ function openEdit(id,preset){
   var it=id?byId(id):null;
   preset=preset||{};
   S.edit=it?Object.assign({},it,{tags:it.tags.slice(),seasons:(it.seasons||[]).slice()}):
-    {id:null,name:'',cat:preset.cat||'blazer',color:preset.color||'',tags:preset.tag?[preset.tag]:[],seasons:[],brand:'',year:'',materials:'',wash:'',care:'',note:'',img:'',imgOrig:'',bg:'orig',tol:28,holes:true,seeds:[],tapMode:false};
-  if(it){S.edit.bg=it.imgOrig?'krem':'orig';S.edit.tol=it.tol||28;S.edit.imgOrig=it.imgOrig||'';S.edit.holes=it.bgHoles!==false;S.edit.seeds=(it.bgSeeds||[]).map(function(q){return q.slice()});S.edit.tapMode=false}
+    {id:null,name:'',cat:preset.cat||'blazer',color:preset.color||'',tags:preset.tag?[preset.tag]:[],seasons:[],brand:'',year:'',materials:'',wash:'',care:'',note:'',img:'',imgOrig:'',bg:'orig',tol:28,holes:true,seeds:[],tapMode:false,strokes:[],paintMode:false,brush:6};
+  if(it){S.edit.bg=it.bgMode||(it.imgOrig?'krem':'orig');S.edit.strokes=JSON.parse(JSON.stringify(it.strokes||[]));S.edit.paintMode=false;S.edit.brush=6;S.edit.tol=it.tol||28;S.edit.imgOrig=it.imgOrig||'';S.edit.holes=it.bgHoles!==false;S.edit.seeds=(it.bgSeeds||[]).map(function(q){return q.slice()});S.edit.tapMode=false}
   S.confirmDel=false;S.sheet='edit';renderSheet(false);
 }
 
@@ -1008,6 +1035,7 @@ var H={
   fOcc:function(d){S.fOcc=d.v;render()},
   fCat:function(d){S.fCat=d.v;render()},
   fSeason:function(d){S.fSeason=d.v;render()},
+  fGroup:function(d){S.fGroup=d.v;render()},
   toggleSeason:function(d){var t=S.edit.seasons,i=t.indexOf(d.v);if(i>-1)t.splice(i,1);else t.push(d.v);renderSheet(true)},
   newItem:function(){openEdit(null)},
   openItem:function(d){openEdit(d.id)},
@@ -1041,9 +1069,11 @@ var H={
     if(!S.confirmDel){S.confirmDel=true;renderSheet(true);return}
     applyImport('replace');
   },
-  bgHoles:function(){S.edit.holes=!(S.edit.holes!==false);renderSheet(true);reprocessBg()},
-  bgTap:function(){S.edit.tapMode=!S.edit.tapMode;renderSheet(true)},
-  bgUndoSeed:function(){S.edit.seeds.pop();renderSheet(true);reprocessBg()},
+  bgHoles:function(){S.edit.holes=!(S.edit.holes!==false);renderSheet(true);reprocessImg()},
+  bgTap:function(){S.edit.tapMode=!S.edit.tapMode;if(S.edit.tapMode)S.edit.paintMode=false;renderSheet(true)},
+  paintToggle:function(){S.edit.paintMode=!S.edit.paintMode;if(S.edit.paintMode)S.edit.tapMode=false;renderSheet(true)},
+  strokeUndo:async function(){S.edit.strokes.pop();await reprocessImg();renderSheet(true)},
+  bgUndoSeed:function(){S.edit.seeds.pop();renderSheet(true);reprocessImg()},
   photoTap:function(d,ev){
     var e=S.edit;if(!e||!e.tapMode||!ev)return;
     var im=ev.target,r=im.getBoundingClientRect(),nw=im.naturalWidth,nh=im.naturalHeight;
@@ -1052,7 +1082,7 @@ var H={
     var u=(ev.clientX-ox)/dw,v=(ev.clientY-oy)/dh;
     if(u<0||u>1||v<0||v>1)return;
     e.seeds=(e.seeds||[]).concat([[+u.toFixed(4),+v.toFixed(4)]]);
-    renderSheet(true);reprocessBg();
+    renderSheet(true);reprocessImg();
   },
   bgSet:async function(d){
     var e=S.edit;if(!e||!e.img)return;
@@ -1061,14 +1091,18 @@ var H={
       if(fresh)e.imgOrig=e.img;
       if(!e.tol)e.tol=28;
       try{
-        var r=await creamBg(e.imgOrig,e.tol,bgOpts());
-        if(r==='none'){if(fresh)e.imgOrig='';e.bg='orig';renderSheet(true);toast('Fant ingen jevn bakgrunn langs kanten å bytte ut');return}
+        var r=await composeImage(e.imgOrig,{cream:true,tol:e.tol,holes:e.holes!==false,seeds:e.seeds||[],strokes:e.strokes||[]});
+        if(r.status==='none'){
+          if(fresh)e.imgOrig='';
+          e.bg='orig';renderSheet(true);toast('Fant ingen jevn bakgrunn langs kanten å bytte ut');return;
+        }
         e.bg='krem';
-        if(r==='toomuch'){e.img=e.imgOrig;toast('Plagget ligner for mye på bakgrunnen. Senk følsomheten.')}
-        else e.img=r;
+        e.img=r.url;
+        if(r.status==='toomuch')toast('Plagget ligner for mye på bakgrunnen. Senk følsomheten.');
       }catch(err){if(fresh)e.imgOrig='';toast('Kunne ikke behandle bildet');return}
     }else{
-      e.bg='orig';e.tapMode=false;if(e.imgOrig)e.img=e.imgOrig;
+      e.bg='orig';e.tapMode=false;
+      if(e.imgOrig)await reprocessImg();
     }
     renderSheet(true);
   },
@@ -1111,7 +1145,7 @@ var H={
   toggleTag:function(d){var t=S.edit.tags,i=t.indexOf(d.v);if(i>-1)t.splice(i,1);else t.push(d.v);renderSheet(true)},
   saveItem:async function(){
     var e=S.edit;
-    var obj={id:e.id||uid(),name:(e.name||'').trim()||catL(e.cat),cat:e.cat,color:e.color,tags:e.tags.slice(),seasons:(e.seasons||[]).slice(),brand:(e.brand||'').trim(),year:String(e.year||'').replace(/\D/g,'').slice(0,4),materials:(e.materials||'').trim(),wash:(e.wash||'').trim(),care:(e.care||'').trim(),note:e.note||'',img:e.img||'',imgOrig:(e.bg==='krem'&&e.imgOrig)?e.imgOrig:'',tol:e.tol||28,bgHoles:e.holes!==false,bgSeeds:(e.bg==='krem'?(e.seeds||[]):[]),created:e.created||Date.now()};
+    var obj={id:e.id||uid(),name:(e.name||'').trim()||catL(e.cat),cat:e.cat,color:e.color,tags:e.tags.slice(),seasons:(e.seasons||[]).slice(),brand:(e.brand||'').trim(),year:String(e.year||'').replace(/\D/g,'').slice(0,4),materials:(e.materials||'').trim(),wash:(e.wash||'').trim(),care:(e.care||'').trim(),note:e.note||'',img:e.img||'',imgOrig:((e.bg==='krem'||(e.strokes||[]).length)&&e.imgOrig)?e.imgOrig:'',bgMode:e.bg,strokes:((e.strokes||[]).length&&e.imgOrig)?e.strokes:[],tol:e.tol||28,bgHoles:e.holes!==false,bgSeeds:(e.bg==='krem'?(e.seeds||[]):[]),created:e.created||Date.now()};
     var idx=S.items.findIndex(function(i){return i.id===obj.id});
     if(idx>-1)S.items[idx]=obj;else S.items.push(obj);
     closeSheet();render();
@@ -1209,6 +1243,7 @@ document.addEventListener('click',function(e){
 document.addEventListener('input',function(e){
   var f=e.target.dataset&&e.target.dataset.f;if(!f)return;
   if(f==='tol'&&S.edit){S.edit.tol=+e.target.value;scheduleBg();return}
+  if(f==='brush'&&S.edit){S.edit.brush=+e.target.value;return}
   if(f==='cname'&&S.cdraft){S.cdraft.name=e.target.value;return}
   if(f==='chex'&&S.cdraft){setHex(e.target.value.toLowerCase(),'chext');return}
   if(f==='chext'&&S.cdraft){var hx=normHex(e.target.value);if(hx)setHex(hx,'chex');return}
@@ -1228,9 +1263,60 @@ document.addEventListener('change',async function(e){
     return;
   }
   if(e.target.id!=='file'||!e.target.files||!e.target.files[0])return;
-  try{S.edit.img=await fileToDataURL(e.target.files[0],800);S.edit.imgOrig='';S.edit.bg='orig';S.edit.seeds=[];S.edit.tapMode=false;renderSheet(true)}
+  try{S.edit.img=await fileToDataURL(e.target.files[0],800);S.edit.imgOrig='';S.edit.bg='orig';S.edit.seeds=[];S.edit.tapMode=false;S.edit.strokes=[];S.edit.paintMode=false;renderSheet(true)}
   catch(err){toast('Kunne ikke lese bildet. Prøv et JPEG- eller PNG-bilde.')}
 });
+/* freehand cream brush on the photo */
+var painting=null;
+function imgGeom(im){
+  var r=im.getBoundingClientRect(),nw=im.naturalWidth,nh=im.naturalHeight;
+  if(!nw||!nh||!r.width)return null;
+  var sc=Math.min(r.width/nw,r.height/nh),dw=nw*sc,dh=nh*sc;
+  return {rect:r,dw:dw,dh:dh,ox:r.left+(r.width-dw)/2,oy:r.top+(r.height-dh)/2};
+}
+function paintSeg(p,a,b){
+  var x=p.ctx,g=p.g,R=p.r*g.dw;
+  function X(u){return (g.ox-g.rect.left)+u*g.dw}
+  function Y(v){return (g.oy-g.rect.top)+v*g.dh}
+  x.fillStyle='#ede2c8';x.strokeStyle='#ede2c8';x.lineCap='round';x.lineJoin='round';x.lineWidth=2*R;
+  x.beginPath();
+  if(!b){x.arc(X(a[0]),Y(a[1]),R,0,Math.PI*2);x.fill()}
+  else{x.moveTo(X(a[0]),Y(a[1]));x.lineTo(X(b[0]),Y(b[1]));x.stroke()}
+}
+document.addEventListener('pointerdown',function(ev){
+  var e=S.edit;if(!e||!e.paintMode||painting)return;
+  var im=ev.target;if(!im||im.tagName!=='IMG'||!im.closest||!im.closest('.photo'))return;
+  var g=imgGeom(im);if(!g)return;
+  var u=(ev.clientX-g.ox)/g.dw,v=(ev.clientY-g.oy)/g.dh;
+  if(u<0||u>1||v<0||v>1)return;
+  ev.preventDefault();
+  try{im.setPointerCapture(ev.pointerId)}catch(err){}
+  var cv=document.createElement('canvas');cv.className='paintcv';
+  cv.width=Math.max(1,Math.round(g.rect.width));cv.height=Math.max(1,Math.round(g.rect.height));
+  im.parentNode.appendChild(cv);
+  painting={id:ev.pointerId,pts:[[+u.toFixed(4),+v.toFixed(4)]],r:(e.brush||6)/400,cv:cv,ctx:cv.getContext('2d'),g:g};
+  paintSeg(painting,painting.pts[0],null);
+});
+document.addEventListener('pointermove',function(ev){
+  var p=painting;if(!p||ev.pointerId!==p.id)return;
+  ev.preventDefault();
+  var g=p.g,u=Math.max(0,Math.min(1,(ev.clientX-g.ox)/g.dw)),v=Math.max(0,Math.min(1,(ev.clientY-g.oy)/g.dh)),last=p.pts[p.pts.length-1];
+  if(Math.abs(u-last[0])+Math.abs(v-last[1])<0.003)return;
+  var pt=[+u.toFixed(4),+v.toFixed(4)];p.pts.push(pt);paintSeg(p,last,pt);
+});
+async function endPaint(ev){
+  var p=painting;if(!p||(ev&&ev.pointerId!==p.id))return;
+  painting=null;
+  var e=S.edit;
+  if(!e){if(p.cv.parentNode)p.cv.parentNode.removeChild(p.cv);return}
+  if(!e.imgOrig)e.imgOrig=e.img;
+  e.strokes=(e.strokes||[]).concat([{r:p.r,pts:p.pts}]);
+  await reprocessImg();
+  if(p.cv.parentNode)p.cv.parentNode.removeChild(p.cv);
+  if(S.edit===e)renderSheet(true);
+}
+document.addEventListener('pointerup',endPaint);
+document.addEventListener('pointercancel',endPaint);
 document.addEventListener('keydown',function(e){
   if(e.key==='Escape'&&S.sheet)H.closeSheet();
   if(e.key==='Enter'&&e.target.dataset&&e.target.dataset.f==='custom'){e.preventDefault();H.addCustom()}
