@@ -85,6 +85,10 @@ h2{margin:0}
 .item:focus-visible{outline:2px solid var(--accent);outline-offset:4px;border-radius:6px}
 .item .nm{display:block;margin-top:8px;font-weight:600;font-size:15px;line-height:1.25}
 .meta{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;margin-top:2px}
+.dots{display:inline-flex;align-items:center;gap:3px;flex:none}
+.dot.sm{width:8px;height:8px}
+.dot.ring{background:conic-gradient(#d90429,#f4a300,#ffe14d,#4cb050,#2a9df4,#8e44ad,#d90429)}
+.sw button[disabled]{cursor:not-allowed}
 .dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(0,0,0,.28);display:inline-block;flex:none}
 .tg{display:block;color:var(--muted);font-size:12.5px;margin-top:1px}
 
@@ -147,6 +151,10 @@ textarea{resize:vertical}
 .occ-h{background:none;border:0;padding:0;font:inherit;color:inherit;display:flex;align-items:center;gap:6px;cursor:pointer;text-align:left}
 .chev{display:inline-grid;transition:transform .15s}
 .chev.open{transform:rotate(180deg)}
+.elrow{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.sg{display:inline-flex;gap:6px;flex:none}
+.sgi{width:17px;height:17px;color:var(--line)}
+.sgi.on{color:var(--accent)}
 .thumbs{display:flex;flex-wrap:wrap;gap:8px;margin-top:8px}
 .tb{background:none;border:0;padding:0;width:56px;cursor:pointer;border-radius:4px;color:inherit}
 .tb .mount{border-radius:4px;padding:0}
@@ -344,9 +352,9 @@ var MROWS=[
   {k:'smykker',cats:['smykker']},{k:'vesker',cats:['vesker']},{k:'tilbehor',cats:['tilbehor']}
 ];
 
-var S={tab:'plagg',items:[],outfits:[],wish:[],colors:[],fOcc:'alle',fCat:'alle',fSeason:'alle',fGroup:'alle',oSeason:'alle',oGroup:'alle',occ:'formelt',
+var S={tab:'plagg',items:[],outfits:[],wish:[],colors:[],fOcc:'alle',fCat:'alle',fSeason:'alle',fGroup:'alle',fExtra:false,oSeason:'alle',oGroup:'alle',occ:'formelt',
   cur:{},curName:'',curId:null,storage:true,sheet:null,edit:null,picker:null,confirmDel:false,confirmOutfit:null,customText:'',
-  cdraft:null,colorFrom:null,editScroll:0,lastBackup:'',importData:null,mClosed:{},antMode:'bygg',outfitOcc:'alle',outfitView:null};
+  cdraft:null,colorFrom:null,editScroll:0,lastBackup:'',importData:null,mClosed:{hoytidelig:true,hverdag:true,fest:true,fritid:true},mSeason:'alle',antMode:'bygg',outfitOcc:'alle',outfitView:null};
 
 /* ---------- helpers ---------- */
 function $(s){return document.querySelector(s)}
@@ -358,10 +366,30 @@ function seasonMatch(i,sel){
   var se=i.seasons||[];
   return sel==='helars'?se.indexOf('helars')>-1:(se.indexOf(sel)>-1||se.indexOf('helars')>-1);
 }
-function groupL(k){var g=GROUPS.filter(function(x){return x.k===k})[0];return g?g.l:''}
+var PATTERNS=[{k:'ensfarget',l:'Ensfarget'},{k:'striper',l:'Striper'},{k:'rutete',l:'Rutete'},{k:'blomster',l:'Blomster'},{k:'flerfarget',l:'Flerfarget mønster'},{k:'annet',l:'Annet mønster'}];
+function patternL(k){var p=PATTERNS.filter(function(x){return x.k===k})[0];return p?p.l:''}
+function groupL(k){if(k==='multi')return 'Flerfarget';var g=GROUPS.filter(function(x){return x.k===k})[0];return g?g.l:''}
 function colorGroupOf(i){var c=S.colors.filter(function(x){return x.k===i.color})[0];return c?cg(c):''}
-function outfitFilterOk(i){return seasonMatch(i,S.oSeason)&&(S.oGroup==='alle'||colorGroupOf(i)===S.oGroup)}
+function groupMatch(i,sel){
+  if(sel==='alle')return true;
+  if(sel==='multi')return i.pattern==='flerfarget';
+  if(colorGroupOf(i)===sel)return true;
+  if(S.fExtra)return (i.colors2||[]).some(function(k){var c=S.colors.filter(function(x){return x.k===k})[0];return !!c&&cg(c)===sel});
+  return false;
+}
+function outfitFilterOk(i){return seasonMatch(i,S.oSeason)&&groupMatch(i,S.oGroup)}
 function groupsPresent(){return GROUPS.filter(function(g){return S.colors.some(function(c){return cg(c)===g.k})})}
+function groupChoices(){return groupsPresent().concat([{k:'multi',l:'Flerfarget'}])}
+function extraToggle(sel){
+  return (sel!=='alle'&&sel!=='multi')?'<div class="chips"><button class="chip" data-act="fExtra" aria-pressed="'+!!S.fExtra+'">Ta med tilleggsfarger</button></div>':'';
+}
+function colorDots(i){
+  var c=colObj(i.color),out='';
+  if(!c.none)out+='<i class="dot" style="background:'+esc(c.hex)+'" title="'+esc(c.l)+'"></i>';
+  (i.colors2||[]).forEach(function(k){var x=colObj(k);if(!x.none)out+='<i class="dot sm" style="background:'+esc(x.hex)+'" title="'+esc(x.l)+'"></i>'});
+  if(i.pattern==='flerfarget')out+='<i class="dot ring" title="Flerfarget mønster"></i>';
+  return out?'<span class="dots">'+out+'</span>':'';
+}
 function seasonL(k){var o=SEASONS.filter(function(x){return x.k===k})[0];return o?o.l:''}
 function occL(k){var o=OCCS.filter(function(x){return x.k===k})[0];return o?o.l:''}
 function colObj(k){return S.colors.filter(function(x){return x.k===k})[0]||{k:'',l:'Ingen farge',hex:'#c9ccd2',none:true}}
@@ -442,6 +470,8 @@ async function migrate(meta,allMeta){
     var col=it.color==='lyseblaa'?'himmelblaa':(it.color||'');
     if(col&&keys.indexOf(col)<0)col='';
     if(col!==it.color){it.color=col;ch=true}
+    var c2k=(it.colors2||[]).filter(function(k){return keys.indexOf(k)>-1});
+    if(c2k.length!==(it.colors2||[]).length){it.colors2=c2k;ch=true}
     if(ch)await save('items',it);
   }
   for(var j=0;j<S.outfits.length;j++){
@@ -615,20 +645,20 @@ function chips(list,cur,act,allLabel,wrap){
 }
 
 function viewPlagg(){
-  if(S.fGroup!=='alle'&&!groupsPresent().some(function(g){return g.k===S.fGroup}))S.fGroup='alle';
+  if(S.fGroup!=='alle'&&S.fGroup!=='multi'&&!groupsPresent().some(function(g){return g.k===S.fGroup}))S.fGroup='alle';
   if(!S.items.length){
     return '<section class="empty"><h2>Start med ett plagg</h2><p>Ta et bilde av en blazer, en kjole eller et par sko. Merk plagget med anledning, så kan du bygge antrekk og se hva som mangler.</p><button class="btn" data-act="newItem">Legg til plagg</button></section>'+foot();
   }
   var list=S.items.filter(function(i){
-    return (S.fOcc==='alle'||i.tags.indexOf(S.fOcc)>-1)&&(S.fCat==='alle'||i.cat===S.fCat)&&seasonMatch(i,S.fSeason)&&(S.fGroup==='alle'||colorGroupOf(i)===S.fGroup);
+    return (S.fOcc==='alle'||i.tags.indexOf(S.fOcc)>-1)&&(S.fCat==='alle'||i.cat===S.fCat)&&seasonMatch(i,S.fSeason)&&groupMatch(i,S.fGroup);
   });
-  var h='<div class="filters">'+chips(OCCS,S.fOcc,'fOcc','Alle anledninger')+chips(CATS,S.fCat,'fCat','Alle typer')+chips(SEASONS,S.fSeason,'fSeason','Alle sesonger')+chips(groupsPresent(),S.fGroup,'fGroup','Alle fargegrupper')+'</div>';
+  var h='<div class="filters">'+chips(OCCS,S.fOcc,'fOcc','Alle anledninger')+chips(CATS,S.fCat,'fCat','Alle typer')+chips(SEASONS,S.fSeason,'fSeason','Alle sesonger')+chips(groupChoices(),S.fGroup,'fGroup','Alle fargegrupper')+extraToggle(S.fGroup)+'</div>';
   function card(i){
     var c=colObj(i.color);
     var tg=i.tags.length?i.tags.map(occL).join(', '):'Ikke merket med anledning';
     return '<button class="item" data-act="openItem" data-id="'+i.id+'">'+mount(i)+
       '<span class="nm">'+esc(i.name)+'</span>'+
-      '<span class="meta">'+(c.none?'':'<i class="dot" style="background:'+esc(c.hex)+'" title="'+esc(c.l)+'"></i>')+esc(catL(i.cat))+(i.brand?', '+esc(i.brand):'')+'</span>'+
+      '<span class="meta">'+colorDots(i)+esc(catL(i.cat))+((i.pattern&&i.pattern!=='ensfarget')?', '+esc(patternL(i.pattern)):'')+(i.brand?', '+esc(i.brand):'')+'</span>'+
       '<span class="tg">'+esc(tg)+'</span>'+((i.seasons||[]).length?'<span class="tg">'+esc(i.seasons.map(seasonL).join(', '))+'</span>':'')+'</button>';
   }
   if(!list.length){
@@ -669,7 +699,7 @@ function viewBuilder(){
   var h='<div class="filters"><span class="lbl" style="margin-bottom:6px">Anledning</span>'+
     '<div class="chips">'+OCCS.map(function(o){return '<button class="chip" data-act="occ" data-v="'+o.k+'" aria-pressed="'+(S.occ===o.k)+'">'+o.l+'</button>'}).join('')+'</div>'+
     '<span class="lbl" style="margin-bottom:6px">Sesong</span>'+chips(SEASONS,S.oSeason,'oSeason','Alle sesonger')+
-    '<span class="lbl" style="margin-bottom:6px">Fargegruppe</span>'+chips(groupsPresent(),S.oGroup,'oGroup','Alle fargegrupper')+'</div>';
+    '<span class="lbl" style="margin-bottom:6px">Fargegruppe</span>'+chips(groupChoices(),S.oGroup,'oGroup','Alle fargegrupper')+extraToggle(S.oGroup)+'</div>';
   h+='<div class="panel"><div class="pgrid">'+SLOTS.filter(function(s){return !s.acc}).map(slotTile).join('')+'</div>'+
      '<div class="pacc">'+SLOTS.filter(function(s){return s.acc}).map(slotTile).join('')+'</div></div>';
   h+='<div class="panel-actions"><button class="btn ghost" data-act="suggest">Foreslå antrekk</button><button class="btn ghost" data-act="clearCur"'+(n?'':' disabled')+'>Tøm</button></div>';
@@ -730,16 +760,38 @@ function outfitHTML(){
 
 function wishOf(id){return S.wish.filter(function(w){return w.id===id})[0]}
 
+var SEASON3=SEASONS.filter(function(x){return x.k!=='helars'});
+var SGI_ATTR='viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"';
+var SGI={
+  sommer:'<svg class="sgi %c" '+SGI_ATTR+'><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>',
+  vinter:'<svg class="sgi %c" '+SGI_ATTR+'><path d="M12 2v20M3.3 7l17.4 10M3.3 17l17.4-10M9 4l3 2 3-2M9 20l3-2 3 2"/></svg>',
+  varhost:'<svg class="sgi %c" '+SGI_ATTR+'><path d="M5 19C5 10 10 5 19 5c0 9-5 14-13 14"/><path d="M5 19c3-4 6-7 10-9"/></svg>'
+};
+function seasonGlyphs(cover){
+  var names=SEASON3.filter(function(x){return cover[x.k]}).map(function(x){return x.l.toLowerCase()});
+  return '<span class="sg" role="img" aria-label="'+(names.length?'Dekket for: '+esc(names.join(', ')):'Ikke dekket for noen sesong')+'">'+
+    SEASON3.map(function(x){return SGI[x.k].replace('%c',cover[x.k]?'on':'')}).join('')+'</span>';
+}
 function viewMangler(){
+  var sel=S.mSeason||'alle',selL=sel==='alle'?'':seasonL(sel).toLowerCase();
+  var noSeason=S.items.filter(function(i){return i.tags.length&&!(i.seasons||[]).length}).length;
   var h='<p class="lead">Under hver anledning ser du plaggene dine i hver kategori. Et plagg vises under en anledning når det er merket med den. Hopp over kategorier som ikke passer for deg.</p>';
+  h+='<div class="filters"><span class="lbl" style="margin-bottom:6px">Sesong</span>'+chips(SEASON3,sel,'mSeason','Alle sesonger')+'</div>';
+  h+='<p class="hint">'+(sel==='alle'
+      ?'Symbolene viser hvilke sesonger kategorien er dekket for: sol for sommer, snøkrystall for vinter og blad for vår/høst. Helårsplagg teller for alle.'
+      :'Viser bare plagg for '+esc(selL)+', og helårsplagg er med.')+
+    (noSeason?' '+noSeason+' plagg mangler sesong og teller ikke her.':'')+'</p>';
   var CHEV='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6"/></svg>';
   OCCS.forEach(function(o){
     var open=!S.mClosed[o.k];
     var rows=MROWS.map(function(r){
-      var id=o.k+':'+r.k,w=wishOf(id);
-      var items=S.items.filter(function(i){return i.tags.indexOf(o.k)>-1&&r.cats.indexOf(i.cat)>-1})
+      var base=o.k+':'+r.k,sk=wishOf(base);
+      var wantId=sel==='alle'?base:base+':'+sel,wn=wishOf(wantId);
+      var all=S.items.filter(function(i){return i.tags.indexOf(o.k)>-1&&r.cats.indexOf(i.cat)>-1})
         .sort(function(a,b){return String(a.name).localeCompare(String(b.name),'nb')});
-      return {r:r,id:id,w:w,items:items,label:r.label||catL(r.k),skipped:!!(w&&w.kind==='skip')};
+      var cover={};SEASON3.forEach(function(x){cover[x.k]=all.some(function(i){return seasonMatch(i,x.k)})});
+      var items=sel==='alle'?all:all.filter(function(i){return seasonMatch(i,sel)});
+      return {r:r,base:base,items:items,cover:cover,label:r.label||catL(r.k),skipped:!!(sk&&sk.kind==='skip'),want:!!(wn&&wn.kind==='want')};
     });
     rows=rows.filter(function(r){
       if(r.items.length)return true;
@@ -750,7 +802,12 @@ function viewMangler(){
     var act=rows.filter(function(r){return !r.skipped}),have=act.filter(function(r){return r.items.length}).length;
     h+='<section class="occ"><h2 class="grp"><button class="occ-h" data-act="toggleOcc" data-v="'+o.k+'" aria-expanded="'+open+'">'+esc(o.l)+'<span class="chev'+(open?' open':'')+'">'+CHEV+'</span></button></h2>'+
       '<div class="stitch" aria-hidden="true">'+act.map(function(r){return '<i class="'+(r.items.length?'on':'')+'"></i>'}).join('')+'</div>'+
-      '<p class="prog">'+have+' av '+act.length+' kategorier har plagg</p>';
+      '<p class="prog">'+have+' av '+act.length+' kategorier har plagg'+(sel==='alle'?'':' for '+esc(selL))+'</p>';
+    if(sel==='alle'){
+      h+='<p class="prog">'+SEASON3.map(function(x){
+        return x.l+' '+act.filter(function(r){return r.cover[x.k]}).length+'/'+act.length;
+      }).join(', ')+'</p>';
+    }
     if(open){
       h+='<ul class="ess-list">';
       rows.forEach(function(r){
@@ -760,15 +817,14 @@ function viewMangler(){
           body='<span class="el muted strike">'+esc(r.label)+'</span><div class="ra"><button class="sm" data-act="unskip" '+a+'>Angre</button></div>';
         }else if(r.items.length){
           mark=CHECK;
-          body='<span class="el">'+esc(r.label)+'<span class="cnt">'+r.items.length+'</span></span><div class="thumbs">'+
+          body='<div class="elrow"><span class="el">'+esc(r.label)+'<span class="cnt">'+r.items.length+'</span></span>'+(sel==='alle'?seasonGlyphs(r.cover):'')+'</div><div class="thumbs">'+
             r.items.map(function(i){return '<button class="tb" data-act="openItem" data-id="'+i.id+'" aria-label="'+esc(i.name)+'" title="'+esc(i.name)+'">'+mount(i)+'</button>'}).join('')+
-            '<button class="tb add" data-act="addFor" '+a+' aria-label="Legg til plagg i '+esc(r.label)+'">'+PLUS+'</button></div>';
+            '<button class="tb add" data-act="addFor" '+a+' data-s="'+(sel==='alle'?'':sel)+'" aria-label="Legg til plagg i '+esc(r.label)+'">'+PLUS+'</button></div>';
         }else{
           mark=OPEN;
-          var on=r.w&&r.w.kind==='want';
-          body='<span class="el">'+esc(r.label)+'</span><div class="ra">'+
-            '<button class="sm" data-act="addFor" '+a+'>Legg til plagg</button>'+
-            '<button class="sm" data-act="want" aria-pressed="'+(!!on)+'" '+a+'>'+(on?'På ønskelisten':'Ønskeliste')+'</button>'+
+          body='<span class="el">'+esc(r.label)+(sel==='alle'?'':'<span class="cnt">'+esc(selL)+'</span>')+'</span><div class="ra">'+
+            '<button class="sm" data-act="addFor" '+a+' data-s="'+(sel==='alle'?'':sel)+'">Legg til plagg</button>'+
+            '<button class="sm" data-act="want" aria-pressed="'+r.want+'" '+a+' data-s="'+(sel==='alle'?'':sel)+'">'+(r.want?'På ønskelisten':'Ønskeliste')+'</button>'+
             '<button class="sm" data-act="skip" '+a+'>Hopp over</button></div>';
         }
         h+='<li class="ess"><span>'+mark+'</span><div>'+body+'</div></li>';
@@ -820,6 +876,13 @@ function editHTML(){
     return '<button style="background:'+esc(c.hex)+'" data-act="setColor" data-v="'+esc(c.k)+'" aria-pressed="'+(e.color===c.k)+'" aria-label="'+esc(c.l)+'" title="'+esc(c.l)+'"></button>';
   }).join('')+'<button class="add" data-act="newColor" aria-label="Legg til ny farge" title="Ny farge">'+PLUS+'</button>';
   var cl=colObj(e.color);
+  var c2=e.colors2||[];
+  var sw2=sortedColors().map(function(c){
+    var on=c2.indexOf(c.k)>-1,isMain=e.color===c.k;
+    return '<button style="background:'+esc(c.hex)+(isMain?';opacity:.3':'')+'" data-act="color2Toggle" data-v="'+esc(c.k)+'" aria-pressed="'+on+'" aria-label="'+esc(c.l)+'" title="'+esc(c.l)+'"'+(isMain?' disabled':'')+'></button>';
+  }).join('');
+  var c2names=c2.map(function(k){return colObj(k).l}).join(', ');
+  var pt=PATTERNS.map(function(p){return '<button class="chip" data-act="patternSet" data-v="'+p.k+'" aria-pressed="'+(e.pattern===p.k)+'">'+p.l+'</button>'}).join('');
   var tg=OCCS.map(function(o){
     return '<button class="chip" data-act="toggleTag" data-v="'+o.k+'" aria-pressed="'+(e.tags.indexOf(o.k)>-1)+'">'+o.l+'</button>';
   }).join('');
@@ -846,7 +909,9 @@ function editHTML(){
     (e.img?paintHTML(e):'')+
     '<label class="fld"><span>Navn</span><input data-f="name" value="'+esc(e.name)+'" placeholder="f.eks. Marineblå ullblazer" autocomplete="off"></label>'+
     '<label class="fld"><span>Type</span><select data-f="cat">'+opts+'</select></label>'+
-    '<div class="fld"><span class="lbl">'+(cl.none?'Farge: ingen valgt':'Farge: '+esc(cl.l))+'</span><div class="sw">'+sw+'</div></div>'+
+    '<div class="fld"><span class="lbl">'+(cl.none?'Hovedfarge: ingen valgt':'Hovedfarge: '+esc(cl.l))+'</span><div class="sw">'+sw+'</div></div>'+
+    '<div class="fld"><span class="lbl">Tilleggsfarger'+(c2.length?': '+esc(c2names):', valgfritt')+'</span><div class="sw">'+sw2+'</div><p class="hint">Opptil to, og bare farger som dekker en tydelig del av plagget.</p></div>'+
+    '<div class="fld"><span class="lbl">Mønster</span><div class="chips wrap-chips">'+pt+'</div><p class="hint">Velg «Flerfarget mønster» for plagg med mange farger, og sett hovedfargen til den som dominerer.</p></div>'+
     '<div class="fld"><span class="lbl">Passer til</span><div class="chips wrap-chips">'+tg+'</div></div>'+
     '<div class="fld"><span class="lbl">Sesong</span><div class="chips wrap-chips">'+se+'</div></div>'+
     '<h3>Detaljer, valgfritt</h3>'+
@@ -928,7 +993,7 @@ function readFileText(file){
   return new Promise(function(res,rej){var fr=new FileReader();fr.onload=function(){res(fr.result)};fr.onerror=function(){rej(new Error('read'))};fr.readAsText(file)});
 }
 function normImported(it){
-  it.tags=mapOcc(it.tags||[]);it.seasons=it.seasons||[];
+  it.tags=mapOcc(it.tags||[]);it.seasons=it.seasons||[];it.colors2=it.colors2||[];it.pattern=it.pattern||'';
   if(it.cat==='smoking'||it.cat==='dress')it.cat='blazer';
   if(it.cat==='slips'||it.cat==='belte')it.cat='tilbehor';
   return it;
@@ -994,8 +1059,8 @@ function openEdit(id,preset){
   var it=id?byId(id):null;
   preset=preset||{};
   S.edit=it?Object.assign({},it,{tags:it.tags.slice(),seasons:(it.seasons||[]).slice()}):
-    {id:null,name:'',cat:preset.cat||'blazer',color:preset.color||'',tags:preset.tag?[preset.tag]:[],seasons:[],brand:'',year:'',materials:'',wash:'',care:'',note:'',img:'',imgOrig:'',bg:'orig',tol:28,holes:true,seeds:[],tapMode:false,strokes:[],paintMode:false,brush:6};
-  if(it){S.edit.bg=it.bgMode||(it.imgOrig?'krem':'orig');S.edit.strokes=JSON.parse(JSON.stringify(it.strokes||[]));S.edit.paintMode=false;S.edit.brush=6;S.edit.tol=it.tol||28;S.edit.imgOrig=it.imgOrig||'';S.edit.holes=it.bgHoles!==false;S.edit.seeds=(it.bgSeeds||[]).map(function(q){return q.slice()});S.edit.tapMode=false}
+    {id:null,name:'',cat:preset.cat||'blazer',color:preset.color||'',tags:preset.tag?[preset.tag]:[],seasons:preset.season?[preset.season]:[],colors2:[],pattern:'',brand:'',year:'',materials:'',wash:'',care:'',note:'',img:'',imgOrig:'',bg:'orig',tol:28,holes:true,seeds:[],tapMode:false,strokes:[],paintMode:false,brush:6};
+  if(it){S.edit.colors2=(it.colors2||[]).slice();S.edit.pattern=it.pattern||'';S.edit.bg=it.bgMode||(it.imgOrig?'krem':'orig');S.edit.strokes=JSON.parse(JSON.stringify(it.strokes||[]));S.edit.paintMode=false;S.edit.brush=6;S.edit.tol=it.tol||28;S.edit.imgOrig=it.imgOrig||'';S.edit.holes=it.bgHoles!==false;S.edit.seeds=(it.bgSeeds||[]).map(function(q){return q.slice()});S.edit.tapMode=false}
   S.confirmDel=false;S.sheet='edit';renderSheet(false);
 }
 
@@ -1106,7 +1171,15 @@ var H={
     }
     renderSheet(true);
   },
-  setColor:function(d){S.edit.color=(S.edit.color===d.v)?'':d.v;renderSheet(true)},
+  setColor:function(d){S.edit.color=(S.edit.color===d.v)?'':d.v;S.edit.colors2=(S.edit.colors2||[]).filter(function(k){return k!==S.edit.color});renderSheet(true)},
+  color2Toggle:function(d){
+    var e=S.edit,t=e.colors2||(e.colors2=[]),i=t.indexOf(d.v);
+    if(i>-1)t.splice(i,1);
+    else{if(t.length>=2){toast('Du kan velge opptil to tilleggsfarger');return}t.push(d.v)}
+    renderSheet(true);
+  },
+  patternSet:function(d){S.edit.pattern=(S.edit.pattern===d.v)?'':d.v;renderSheet(true)},
+  fExtra:function(){S.fExtra=!S.fExtra;render()},
   newColor:function(){
     S.colorFrom=(S.sheet==='edit')?'edit':null;
     if(S.colorFrom){var sh=document.querySelector('.sheet');S.editScroll=sh?sh.scrollTop:0}
@@ -1135,8 +1208,13 @@ var H={
     if(!S.confirmDel){S.confirmDel=true;renderSheet(true);return}
     var id=S.cdraft.id,changed=[];
     S.colors=S.colors.filter(function(c){return c.k!==id});
-    S.items.forEach(function(i){if(i.color===id){i.color='';changed.push(i)}});
-    if(S.edit&&S.edit.color===id)S.edit.color='';
+    S.items.forEach(function(i){
+      var ch=false;
+      if(i.color===id){i.color='';ch=true}
+      if((i.colors2||[]).indexOf(id)>-1){i.colors2=i.colors2.filter(function(k){return k!==id});ch=true}
+      if(ch)changed.push(i);
+    });
+    if(S.edit){if(S.edit.color===id)S.edit.color='';S.edit.colors2=(S.edit.colors2||[]).filter(function(k){return k!==id})}
     leaveColor();render();
     await savePalette();
     for(var n=0;n<changed.length;n++)await save('items',changed[n]);
@@ -1145,7 +1223,7 @@ var H={
   toggleTag:function(d){var t=S.edit.tags,i=t.indexOf(d.v);if(i>-1)t.splice(i,1);else t.push(d.v);renderSheet(true)},
   saveItem:async function(){
     var e=S.edit;
-    var obj={id:e.id||uid(),name:(e.name||'').trim()||catL(e.cat),cat:e.cat,color:e.color,tags:e.tags.slice(),seasons:(e.seasons||[]).slice(),brand:(e.brand||'').trim(),year:String(e.year||'').replace(/\D/g,'').slice(0,4),materials:(e.materials||'').trim(),wash:(e.wash||'').trim(),care:(e.care||'').trim(),note:e.note||'',img:e.img||'',imgOrig:((e.bg==='krem'||(e.strokes||[]).length)&&e.imgOrig)?e.imgOrig:'',bgMode:e.bg,strokes:((e.strokes||[]).length&&e.imgOrig)?e.strokes:[],tol:e.tol||28,bgHoles:e.holes!==false,bgSeeds:(e.bg==='krem'?(e.seeds||[]):[]),created:e.created||Date.now()};
+    var obj={id:e.id||uid(),name:(e.name||'').trim()||catL(e.cat),cat:e.cat,color:e.color,colors2:(e.colors2||[]).filter(function(k){return k!==e.color}).slice(0,2),pattern:e.pattern||'',tags:e.tags.slice(),seasons:(e.seasons||[]).slice(),brand:(e.brand||'').trim(),year:String(e.year||'').replace(/\D/g,'').slice(0,4),materials:(e.materials||'').trim(),wash:(e.wash||'').trim(),care:(e.care||'').trim(),note:e.note||'',img:e.img||'',imgOrig:((e.bg==='krem'||(e.strokes||[]).length)&&e.imgOrig)?e.imgOrig:'',bgMode:e.bg,strokes:((e.strokes||[]).length&&e.imgOrig)?e.strokes:[],tol:e.tol||28,bgHoles:e.holes!==false,bgSeeds:(e.bg==='krem'?(e.seeds||[]):[]),created:e.created||Date.now()};
     var idx=S.items.findIndex(function(i){return i.id===obj.id});
     if(idx>-1)S.items[idx]=obj;else S.items.push(obj);
     closeSheet();render();
@@ -1209,13 +1287,14 @@ var H={
     S.confirmOutfit=null;render();await del('outfits',d.id);toast('Antrekket er slettet');
   },
   addFor:function(d){
-    openEdit(null,{cat:d.e,tag:d.g});
+    openEdit(null,{cat:d.e,tag:d.g,season:d.s||undefined});
   },
+  mSeason:function(d){S.mSeason=d.v;render()},
   want:async function(d){
-    var id=d.g+':'+d.e,ex=wishOf(id);
+    var id=d.g+':'+d.e+(d.s?':'+d.s:''),ex=wishOf(id);
     if(ex&&ex.kind==='want'){S.wish=S.wish.filter(function(w){return w.id!==id});render();await del('wish',id);return}
     var row=MROWS.filter(function(x){return x.k===d.e})[0];
-    var w={id:id,kind:'want',text:occL(d.g)+': '+((row&&row.label)||catL(d.e))};
+    var w={id:id,kind:'want',text:occL(d.g)+': '+((row&&row.label)||catL(d.e))+(d.s?' ('+seasonL(d.s).toLowerCase()+')':'')};
     S.wish=S.wish.filter(function(x){return x.id!==id}).concat([w]);render();await save('wish',w);toast('Lagt på ønskelisten');
   },
   skip:async function(d){
