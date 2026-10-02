@@ -179,7 +179,7 @@ textarea{resize:vertical}
 
 /* tab bar */
 .tabs{position:fixed;left:0;right:0;bottom:0;display:flex;background:var(--surface);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom,0px);z-index:20}
-.tabs button{flex:1;background:none;border:0;color:var(--muted);padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;font:500 12px var(--body);cursor:pointer}
+.tabs button{flex:1;background:none;border:0;color:var(--muted);padding:9px 0 8px;display:flex;flex-direction:column;align-items:center;gap:3px;font:500 11.5px var(--body);cursor:pointer}
 .tabs button[aria-current="page"]{color:var(--accent);font-weight:600}
 
 /* sheet */
@@ -212,6 +212,37 @@ input[type=range]{padding:0;border:0;background:transparent;accent-color:var(--a
 .pick .mount{border:2px solid transparent}
 .pick[aria-pressed="true"] .mount{border-color:var(--accent)}
 .pick .pn{display:block;margin-top:5px;font-size:13px;font-weight:500;line-height:1.25}
+
+/* planning */
+.weekbar{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:6px}
+.wk{text-align:center;display:flex;flex-direction:column}
+.wk b{font:600 22px/1.15 var(--display);color:var(--head)}
+.wk span{color:var(--muted);font-size:13px}
+.day{border-top:1px solid var(--line);padding:14px 0 12px;margin-top:12px}
+.dayh{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.dayh h3{margin:0;font:600 18px/1.2 var(--display);color:var(--head)}
+.dayh h3 span{font:500 14px var(--body);color:var(--muted);margin-left:8px}
+.day.today .dayh h3{color:var(--accent)}
+.day.today .dayh h3 span{color:var(--accent)}
+.dayo{display:flex;gap:12px;overflow-x:auto;padding:12px 6px 6px 0}
+.dayc{position:relative;flex:none;width:132px}
+.dayc .rm{position:absolute;top:-8px;right:-8px;background:var(--surface);border:1px solid var(--line);width:28px;height:28px;padding:0}
+.daynote{margin-top:10px;font-size:15px}
+.oname{display:block;margin-top:4px;font-size:13px;font-weight:600;line-height:1.25}
+.packs{display:grid;gap:10px;margin-top:14px}
+.packc{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:14px;text-align:left;color:inherit;font:inherit;cursor:pointer;display:grid;gap:4px}
+.packc b{font-size:16px}
+.bar{height:5px;border-radius:3px;background:var(--line);overflow:hidden;margin-top:6px}
+.bar.big{height:8px;margin-top:14px}
+.bar i{display:block;height:100%;background:var(--accent);border-radius:3px}
+.ph{font:600 17px/1.2 var(--display);color:var(--head);margin:22px 0 0}
+.plist{list-style:none;margin:6px 0 0;padding:0}
+.prow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.prow .th{width:42px}
+.prow .pt{flex:1;min-width:0}
+.prow.done .pt{opacity:.55;text-decoration:line-through}
+.chk{width:30px;height:30px;border-radius:9px;border:2px solid var(--muted);background:none;flex:none;display:grid;place-items:center;color:var(--accent-ink);cursor:pointer;padding:0}
+.chk[aria-pressed="true"]{background:var(--accent);border-color:var(--accent)}
 
 /* backup */
 .backup{margin-top:36px;padding-top:4px;border-top:1px solid var(--line)}
@@ -275,6 +306,10 @@ input[type=range]{padding:0;border:0;background:transparent;accent-color:var(--a
   <button data-act="tab" data-v="palett">
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.8-.8 1.8-1.7 0-.5-.2-.9-.5-1.2-.3-.3-.5-.7-.5-1.2 0-.9.8-1.7 1.7-1.7H16a5 5 0 0 0 5-5c0-3.9-4-7.2-9-7.2z"/><circle cx="7.5" cy="11" r="1" fill="currentColor"/><circle cx="10.5" cy="7" r="1" fill="currentColor"/><circle cx="15" cy="7.5" r="1" fill="currentColor"/></svg>
     Palett
+  </button>
+  <button data-act="tab" data-v="plan">
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/><path d="m9 15 2 2 4-4"/></svg>
+    Planlegging
   </button>
 </nav>
 
@@ -344,7 +379,7 @@ var SLOTS=[
   {k:'tilbehor',l:'Tilbehør',cats:['tilbehor'],acc:true}
 ];
 /* rows shown under every occasion on the Mangler tab, in this order */
-var MEXCL={hverdag:['blazer'],fest:['blazer'],fritid:['blazer','smykker','skjoert','kjole']}; /* rows left out unless they already hold garments */
+var MEXCL={hverdag:['blazer'],fest:['blazer'],fritid:['blazer','smykker','skjoert','kjole','skjorte']}; /* rows left out unless they already hold garments */
 var MROWS=[
   {k:'yttertoy',cats:['yttertoy']},{k:'blazer',cats:['blazer']},{k:'skjorte',cats:['skjorte']},
   {k:'topp',cats:['topp']},{k:'genser',cats:['genser']},{k:'bukse',cats:['bukse']},
@@ -354,7 +389,7 @@ var MROWS=[
 
 var S={tab:'plagg',items:[],outfits:[],wish:[],colors:[],fOcc:'alle',fCat:'alle',fSeason:'alle',fGroup:'alle',fExtra:false,oSeason:'alle',oGroup:'alle',occ:'formelt',
   cur:{},curName:'',curId:null,storage:true,sheet:null,edit:null,picker:null,confirmDel:false,confirmOutfit:null,customText:'',
-  cdraft:null,colorFrom:null,editScroll:0,lastBackup:'',importData:null,mClosed:{hoytidelig:true,hverdag:true,fest:true,fritid:true},mSeason:'alle',antMode:'bygg',outfitOcc:'alle',outfitView:null};
+  cdraft:null,colorFrom:null,editScroll:0,lastBackup:'',importData:null,mClosed:{hoytidelig:true,hverdag:true,fest:true,fritid:true},mSeason:'alle',plans:{},packs:[],planMode:'uke',weekMon:dstr(monOf(new Date())),planPickDay:0,ppOcc:'alle',pcCat:'alle',packOpen:null,packName:'',packText:'',confirmWeek:false,antMode:'bygg',outfitOcc:'alle',outfitView:null};
 
 /* ---------- helpers ---------- */
 function $(s){return document.querySelector(s)}
@@ -414,8 +449,8 @@ var db=null;
 function openDB(){
   return new Promise(function(res){
     try{
-      var r=indexedDB.open('formell-garderobe',2);
-      r.onupgradeneeded=function(){var d=r.result;['items','outfits','wish','meta'].forEach(function(n){if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:'id'})})};
+      var r=indexedDB.open('formell-garderobe',3);
+      r.onupgradeneeded=function(){var d=r.result;['items','outfits','wish','meta','plans','packs'].forEach(function(n){if(!d.objectStoreNames.contains(n))d.createObjectStore(n,{keyPath:'id'})})};
       r.onsuccess=function(){db=r.result;res(true)};
       r.onerror=function(){res(false)};
       r.onblocked=function(){res(false)};
@@ -842,6 +877,152 @@ function viewMangler(){
   return h;
 }
 
+/* ---------- planning: week plans and packing lists ---------- */
+var DAYS=['Mandag','Tirsdag','Onsdag','Torsdag','Fredag','Lørdag','Søndag'];
+var MONTHS=['jan.','feb.','mars','apr.','mai','juni','juli','aug.','sep.','okt.','nov.','des.'];
+var TICK='<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7"/></svg>';
+function pad2(n){return ('0'+n).slice(-2)}
+function dstr(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate())}
+function parseD(s){var p=s.split('-');return new Date(+p[0],+p[1]-1,+p[2])}
+function addDays(d,n){return new Date(d.getFullYear(),d.getMonth(),d.getDate()+n)}
+function monOf(d){var x=new Date(d.getFullYear(),d.getMonth(),d.getDate());return addDays(x,-((x.getDay()+6)%7))}
+function isoWeek(d){
+  var t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())),day=t.getUTCDay()||7;
+  t.setUTCDate(t.getUTCDate()+4-day);
+  var y0=new Date(Date.UTC(t.getUTCFullYear(),0,1));
+  return Math.ceil(((t-y0)/86400000+1)/7);
+}
+function dayLabel(d){return d.getDate()+'. '+MONTHS[d.getMonth()]}
+var saveTimer={};
+function saveSoon(key,fn){clearTimeout(saveTimer[key]);saveTimer[key]=setTimeout(fn,500)}
+function getPlan(id){return S.plans[id]||(S.plans[id]={id:id,days:{}})}
+function getDay(pl,i){return pl.days[i]||(pl.days[i]={outfits:[],note:''})}
+function savePlan(pl){return save('plans',pl)}
+function savePack(pk){return save('packs',pk)}
+function packById(id){return S.packs.filter(function(p){return p.id===id})[0]}
+function outfitById(id){return S.outfits.filter(function(o){return o.id===id})[0]}
+function outfitGarmentIds(o){
+  var ids=[];
+  SLOTS.forEach(function(s){var id=o.slots[s.k];if(id&&byId(id)&&ids.indexOf(id)<0)ids.push(id)});
+  return ids;
+}
+function addGarmentsToPack(pk,ids){
+  var n=0;
+  ids.forEach(function(id){
+    if(!pk.items.some(function(x){return x.kind==='plagg'&&x.ref===id})){pk.items.push({id:uid(),kind:'plagg',ref:id,done:false});n++}
+  });
+  return n;
+}
+function outfitGrid(list,act){
+  return '<div class="ogrid">'+list.map(function(o){
+    return '<button class="ocard" data-act="'+act+'" data-id="'+o.id+'" aria-label="'+esc(o.name)+', '+esc(occL(o.occ))+'">'+collageHTML(o)+'<span class="oname">'+esc(o.name)+'</span></button>';
+  }).join('')+'</div>';
+}
+function viewPlan(){
+  var modes='<div class="chips"><button class="chip" data-act="planMode" data-v="uke" aria-pressed="'+(S.planMode!=='pakk')+'">Ukeplan</button>'+
+    '<button class="chip" data-act="planMode" data-v="pakk" aria-pressed="'+(S.planMode==='pakk')+'">Pakkelister ('+S.packs.length+')</button></div>';
+  return modes+(S.planMode==='pakk'?viewPacks():viewWeek());
+}
+function viewWeek(){
+  var mon=parseD(S.weekMon),sun=addDays(mon,6),plan=S.plans[S.weekMon]||{days:{}},today=dstr(new Date());
+  function AR(d){return '<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="'+d+'"/></svg>'}
+  var h='<div class="weekbar"><button class="x" data-act="weekGo" data-v="-1" aria-label="Forrige uke">'+AR('m15 6-6 6 6 6')+'</button>'+
+    '<div class="wk"><b>Uke '+isoWeek(mon)+'</b><span>'+dayLabel(mon)+' til '+dayLabel(sun)+' '+sun.getFullYear()+'</span></div>'+
+    '<button class="x" data-act="weekGo" data-v="1" aria-label="Neste uke">'+AR('m9 6 6 6-6 6')+'</button></div>';
+  h+='<div class="row" style="margin-top:8px"><button class="sm" data-act="weekToday">Denne uken</button></div>';
+  var any=false,has=false;
+  for(var i=0;i<7;i++){
+    var date=addDays(mon,i),dd=plan.days[i]||{outfits:[],note:''};
+    var outs=(dd.outfits||[]).map(outfitById).filter(Boolean);
+    if(outs.length)any=true;
+    if(outs.length||dd.note)has=true;
+    h+='<section class="day'+(dstr(date)===today?' today':'')+'"><div class="dayh"><h3>'+DAYS[i]+'<span>'+dayLabel(date)+'</span></h3>'+
+      '<button class="sm" data-act="planAdd" data-day="'+i+'">Legg til antrekk</button></div>';
+    if(outs.length){
+      h+='<div class="dayo">'+outs.map(function(o){
+        return '<div class="dayc"><button class="ocard" data-act="openOutfitView" data-id="'+o.id+'" aria-label="'+esc(o.name)+', '+esc(occL(o.occ))+'">'+collageHTML(o)+'</button>'+
+          '<button class="x rm" data-act="planRemove" data-day="'+i+'" data-id="'+o.id+'" aria-label="Fjern '+esc(o.name)+' fra dagen">'+CLOSE+'</button></div>';
+      }).join('')+'</div>';
+    }
+    h+='<input class="daynote" data-f="daynote" data-day="'+i+'" value="'+esc(dd.note||'')+'" placeholder="Notat, f.eks. møte kl. 10" autocomplete="off" aria-label="Notat for '+DAYS[i].toLowerCase()+'"></section>';
+  }
+  h+='<div class="row">'+(any?'<button class="btn" data-act="packFromWeek">Lag pakkeliste fra uken</button>':'')+
+    (has?'<button class="btn danger" data-act="weekClear">'+(S.confirmWeek?'Trykk igjen for å tømme uken':'Tøm uken')+'</button>':'')+'</div>';
+  if(!S.outfits.length)h+='<p class="hint">Du har ingen lagrede antrekk ennå. Bygg og lagre noen under Antrekk, så kan du legge dem inn i uken.</p>';
+  return h;
+}
+function viewPacks(){
+  var pk=S.packOpen?packById(S.packOpen):null;
+  if(pk)return viewPack(pk);
+  S.packOpen=null;
+  var h='<div class="addrow"><input data-f="packname" value="'+esc(S.packName)+'" placeholder="Ny pakkeliste, f.eks. helgetur til Bergen" autocomplete="off"><button class="btn" data-act="packCreate">Lag liste</button></div>';
+  if(!S.packs.length)return h+'<p class="lead">Ingen pakkelister ennå. Lag en liste, legg til plagg fra garderoben eller fra antrekk, og kryss av mens du pakker.</p>';
+  return h+'<div class="packs">'+S.packs.slice().sort(function(a,b){return b.created-a.created}).map(function(p){
+    var tot=p.items.length,done=p.items.filter(function(x){return x.done}).length;
+    return '<button class="packc" data-act="packOpen" data-id="'+p.id+'"><b>'+esc(p.name)+'</b><span class="meta">'+done+' av '+tot+' pakket</span>'+
+      '<span class="bar" aria-hidden="true"><i style="width:'+(tot?Math.round(done/tot*100):0)+'%"></i></span></button>';
+  }).join('')+'</div>';
+}
+function packRow(x){
+  var it=x.kind==='plagg'?byId(x.ref):null,label=it?it.name:x.text;
+  return '<li class="prow'+(x.done?' done':'')+'"><button class="chk" data-act="packTick" data-id="'+x.id+'" aria-pressed="'+!!x.done+'" aria-label="'+(x.done?'Pakket':'Ikke pakket')+': '+esc(label)+'">'+(x.done?TICK:'')+'</button>'+
+    (it?'<span class="th">'+mount(it)+'</span>':'')+
+    '<span class="pt"><b>'+esc(label)+'</b>'+(it?'<br><span class="meta">'+esc(catL(it.cat))+'</span>':'')+'</span>'+
+    '<button class="x" data-act="packDel" data-id="'+x.id+'" aria-label="Fjern '+esc(label)+' fra listen">'+CLOSE+'</button></li>';
+}
+function viewPack(pk){
+  var tot=pk.items.length,done=pk.items.filter(function(x){return x.done}).length,pct=tot?Math.round(done/tot*100):0;
+  var h='<div class="chips"><button class="chip" data-act="packBack">Alle lister</button></div>';
+  h+='<label class="fld"><span>Navn</span><input data-f="packtitle" value="'+esc(pk.name)+'" autocomplete="off"></label>';
+  h+='<div class="bar big" aria-hidden="true"><i style="width:'+pct+'%"></i></div><p class="prog">'+done+' av '+tot+' pakket</p>';
+  h+='<div class="row"><button class="btn" data-act="packAddGarments">Legg til plagg</button><button class="btn ghost" data-act="packAddOutfit">Fra antrekk</button></div>';
+  h+='<div class="addrow"><input data-f="packtext" value="'+esc(S.packText)+'" placeholder="Annet, f.eks. pass eller lader" autocomplete="off"><button class="btn" data-act="packAddText">Legg til</button></div>';
+  var gar=pk.items.filter(function(x){return x.kind==='plagg'&&byId(x.ref)}),other=pk.items.filter(function(x){return x.kind!=='plagg'});
+  if(!gar.length&&!other.length)h+='<p class="lead">Listen er tom. Legg til plagg, hent alle plaggene fra et antrekk, eller skriv inn egne ting.</p>';
+  CATS.forEach(function(c){
+    var rows=gar.filter(function(x){return byId(x.ref).cat===c.k}).sort(function(a,b){return String(byId(a.ref).name).localeCompare(String(byId(b.ref).name),'nb')});
+    if(rows.length)h+='<h3 class="ph">'+esc(c.l)+'</h3><ul class="plist">'+rows.map(packRow).join('')+'</ul>';
+  });
+  var unk=gar.filter(function(x){return !CATS.some(function(c){return c.k===byId(x.ref).cat})});
+  if(unk.length)h+='<h3 class="ph">Andre plagg</h3><ul class="plist">'+unk.map(packRow).join('')+'</ul>';
+  if(other.length)h+='<h3 class="ph">Annet</h3><ul class="plist">'+other.map(packRow).join('')+'</ul>';
+  h+='<div class="row"><button class="btn ghost" data-act="packReset">Nullstill avkrysning</button><button class="btn danger" data-act="packDelete">'+(S.confirmDel?'Trykk igjen for å slette listen':'Slett listen')+'</button></div>';
+  return h;
+}
+function planpickHTML(){
+  var date=addDays(parseD(S.weekMon),S.planPickDay);
+  var list=S.outfits.filter(function(o){return S.ppOcc==='alle'||o.occ===S.ppOcc}).sort(function(a,b){return String(a.name).localeCompare(String(b.name),'nb')});
+  var body=chips(OCCS,S.ppOcc,'ppOcc','Alle anledninger');
+  if(!S.outfits.length)body+='<p class="lead">Du har ingen lagrede antrekk ennå.</p><div class="row"><button class="btn" data-act="gotoBuild">Bygg et antrekk</button></div>';
+  else if(!list.length)body+='<p class="lead">Ingen antrekk for denne anledningen.</p>';
+  else body+=outfitGrid(list,'planPick');
+  return '<div class="scrim" data-act="closeSheet"></div>'+
+  '<div class="sheet enter" role="dialog" aria-modal="true" aria-labelledby="st" tabindex="-1">'+
+    '<div class="sheet-h"><h2 id="st">'+DAYS[S.planPickDay]+' '+esc(dayLabel(date))+'</h2><button class="x" data-act="closeSheet" aria-label="Lukk">'+CLOSE+'</button></div>'+body+'</div>';
+}
+function packaddHTML(){
+  var pk=packById(S.packOpen);if(!pk)return '';
+  var list=S.items.filter(function(i){return S.pcCat==='alle'||i.cat===S.pcCat}).sort(function(a,b){return String(a.name).localeCompare(String(b.name),'nb')});
+  var inList=function(id){return pk.items.some(function(x){return x.kind==='plagg'&&x.ref===id})};
+  var body=chips(CATS,S.pcCat,'pcCat','Alle typer');
+  if(!S.items.length)body+='<p class="lead">Du har ingen plagg ennå.</p>';
+  else if(!list.length)body+='<p class="lead">Ingen plagg av denne typen.</p>';
+  else body+='<div class="pickgrid">'+list.map(function(i){
+    return '<button class="pick" data-act="packToggle" data-id="'+i.id+'" aria-pressed="'+inList(i.id)+'">'+mount(i)+'<span class="pn">'+esc(i.name)+'</span></button>';
+  }).join('')+'</div>';
+  body+='<div class="row"><button class="btn" data-act="closeSheet">Ferdig</button></div>';
+  return '<div class="scrim" data-act="closeSheet"></div>'+
+  '<div class="sheet enter" role="dialog" aria-modal="true" aria-labelledby="st" tabindex="-1">'+
+    '<div class="sheet-h"><h2 id="st">Legg til plagg</h2><button class="x" data-act="closeSheet" aria-label="Lukk">'+CLOSE+'</button></div>'+body+'</div>';
+}
+function packoutHTML(){
+  var list=S.outfits.slice().sort(function(a,b){return String(a.name).localeCompare(String(b.name),'nb')});
+  var body=list.length?'<p class="hint">Trykk på et antrekk for å legge alle plaggene på listen.</p>'+outfitGrid(list,'packFromOutfit'):'<p class="lead">Du har ingen lagrede antrekk ennå.</p>';
+  return '<div class="scrim" data-act="closeSheet"></div>'+
+  '<div class="sheet enter" role="dialog" aria-modal="true" aria-labelledby="st" tabindex="-1">'+
+    '<div class="sheet-h"><h2 id="st">Fra antrekk</h2><button class="x" data-act="closeSheet" aria-label="Lukk">'+CLOSE+'</button></div>'+body+'</div>';
+}
+
 function viewPalett(){
   var h='<p class="lead">Fargene som kler deg, sortert etter fargegruppe. Trykk på en farge for å endre den, eller legg til en ny. Plaggene kan merkes med fargene her.</p>';
   h+='<div class="row"><button class="btn" data-act="newColor">Ny farge</button></div>';
@@ -861,7 +1042,7 @@ function viewPalett(){
 function render(){
   $('#count').textContent=S.items.length+' plagg, '+S.outfits.length+' antrekk';
   $('#warn').innerHTML=S.storage?'':'<p class="warn">Lagring er ikke tilgjengelig i denne nettleseren. Plaggene forsvinner når du lukker siden.</p>';
-  $('#view').innerHTML=S.tab==='plagg'?viewPlagg():S.tab==='antrekk'?viewAntrekk():S.tab==='mangler'?viewMangler():viewPalett();
+  $('#view').innerHTML=S.tab==='plagg'?viewPlagg():S.tab==='antrekk'?viewAntrekk():S.tab==='mangler'?viewMangler():S.tab==='plan'?viewPlan():viewPalett();
   document.querySelectorAll('.tabs button').forEach(function(b){b.setAttribute('aria-current',b.dataset.v===S.tab?'page':'false')});
   $('#fab').hidden=(S.tab!=='plagg'||!S.items.length);
 }
@@ -957,11 +1138,23 @@ function renderSheet(keep,st0){
   var root=$('#sheetRoot'),old=root.querySelector('.sheet'),st=(st0!=null)?st0:((keep&&old)?old.scrollTop:0);
   if(!S.sheet){root.innerHTML='';document.body.style.overflow='';return}
   S.keep=!!keep;
-  root.innerHTML=S.sheet==='edit'?editHTML():S.sheet==='color'?colorHTML():S.sheet==='import'?importHTML():S.sheet==='outfit'?outfitHTML():pickHTML();
+  root.innerHTML=sheetHTML();
   document.body.style.overflow='hidden';
   var sh=root.querySelector('.sheet');
   sh.scrollTop=st;
   if(!keep) sh.focus({preventScroll:true});
+}
+function sheetHTML(){
+  switch(S.sheet){
+    case 'edit':return editHTML();
+    case 'color':return colorHTML();
+    case 'import':return importHTML();
+    case 'outfit':return outfitHTML();
+    case 'planpick':return planpickHTML();
+    case 'packadd':return packaddHTML();
+    case 'packout':return packoutHTML();
+    default:return pickHTML();
+  }
 }
 function closeSheet(){S.sheet=null;S.edit=null;S.picker=null;S.importData=null;S.outfitView=null;S.confirmDel=false;renderSheet()}
 
@@ -971,7 +1164,7 @@ function importHTML(){
   return '<div class="scrim" data-act="closeSheet"></div>'+
   '<div class="sheet enter" role="dialog" aria-modal="true" aria-labelledby="st" tabindex="-1">'+
     '<div class="sheet-h"><h2 id="st">Last inn sikkerhetskopi</h2><button class="x" data-act="closeSheet" aria-label="Lukk">'+CLOSE+'</button></div>'+
-    '<p class="lead">Filen har '+n+' plagg, '+o+' antrekk og '+c+' farger.'+esc(when)+'</p>'+
+    '<p class="lead">Filen har '+n+' plagg, '+o+' antrekk og '+c+' farger.'+((d.plans||[]).length||(d.packs||[]).length?' Den har også '+(d.plans||[]).length+((d.plans||[]).length===1?' ukeplan':' ukeplaner')+' og '+(d.packs||[]).length+((d.packs||[]).length===1?' pakkeliste.':' pakkelister.'):'')+esc(when)+'</p>'+
     '<p class="hint"><b>Slå sammen</b> legger det som mangler til det du har nå. Finnes det samme plagget begge steder, er det filens versjon som gjelder. <b>Erstatt alt</b> sletter det du har nå og bruker bare filen.</p>'+
     '<div class="row"><button class="btn" data-act="importMerge">Slå sammen</button>'+
     '<button class="btn danger" data-act="importReplace">'+(S.confirmDel?'Trykk igjen for å erstatte alt':'Erstatt alt')+'</button>'+
@@ -982,7 +1175,7 @@ function backupName(){
   return 'garderoben-'+d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'.json';
 }
 function backupJSON(){
-  return JSON.stringify({app:'garderoben',version:1,exported:new Date().toISOString(),items:S.items,outfits:S.outfits,wish:S.wish,colors:S.colors});
+  return JSON.stringify({app:'garderoben',version:1,exported:new Date().toISOString(),items:S.items,outfits:S.outfits,wish:S.wish,colors:S.colors,plans:Object.keys(S.plans).map(function(k){return S.plans[k]}),packs:S.packs});
 }
 async function markBackup(){
   S.lastBackup=new Date().toISOString();
@@ -1006,18 +1199,21 @@ function mergeBy(cur,inc,key){
 async function applyImport(mode){
   var d=S.importData;if(!d)return;
   var items=d.items.map(normImported),outfits=d.outfits||[],wish=d.wish||[],colors=d.colors||[];
-  if(mode==='replace'){S.items=items;S.outfits=outfits;S.wish=wish;S.colors=colors}
+  var plansIn=d.plans||[],packsIn=d.packs||[];
+  if(mode==='replace'){S.items=items;S.outfits=outfits;S.wish=wish;S.colors=colors;S.plans={};plansIn.forEach(function(pl){S.plans[pl.id]=pl});S.packs=packsIn}
   else{
     S.items=mergeBy(S.items,items,'id');S.outfits=mergeBy(S.outfits,outfits,'id');
     S.wish=mergeBy(S.wish,wish,'id');S.colors=mergeBy(S.colors,colors,'k');
+    plansIn.forEach(function(pl){S.plans[pl.id]=pl});S.packs=mergeBy(S.packs,packsIn,'id');
   }
   S.colors.forEach(function(c){if(!c.g)c.g=groupOf(c.hex)});
   var count=items.length;
   closeSheet();render();
   if(db){
     try{
-      if(mode==='replace'){await dbClear('items');await dbClear('outfits');await dbClear('wish')}
+      if(mode==='replace'){await dbClear('items');await dbClear('outfits');await dbClear('wish');await dbClear('plans');await dbClear('packs')}
       await dbPutMany('items',S.items);await dbPutMany('outfits',S.outfits);await dbPutMany('wish',S.wish);
+      await dbPutMany('plans',Object.keys(S.plans).map(function(k){return S.plans[k]}));await dbPutMany('packs',S.packs);
       await savePalette();
       toast('Lastet inn '+count+' plagg');
     }catch(e){toast('Noe gikk galt under lagring. Prøv igjen, eller last inn en mindre fil.')}
@@ -1237,6 +1433,83 @@ var H={
     closeSheet();render();await del('items',id);toast('Plagget er slettet');
   },
   occ:function(d){S.occ=d.v;render()},
+  planMode:function(d){S.planMode=d.v;S.packOpen=null;S.confirmWeek=false;S.confirmDel=false;render()},
+  weekGo:function(d){S.weekMon=dstr(addDays(parseD(S.weekMon),7*(+d.v)));S.confirmWeek=false;render()},
+  weekToday:function(){S.weekMon=dstr(monOf(new Date()));S.confirmWeek=false;render()},
+  planAdd:function(d){S.planPickDay=+d.day;S.ppOcc='alle';S.sheet='planpick';renderSheet(false)},
+  ppOcc:function(d){S.ppOcc=d.v;renderSheet(true)},
+  planPick:async function(d){
+    var pl=getPlan(S.weekMon),dd=getDay(pl,S.planPickDay);
+    if(dd.outfits.indexOf(d.id)<0)dd.outfits.push(d.id);
+    closeSheet();render();await savePlan(pl);
+  },
+  planRemove:async function(d){
+    var pl=getPlan(S.weekMon),dd=getDay(pl,+d.day);
+    dd.outfits=dd.outfits.filter(function(x){return x!==d.id});
+    render();await savePlan(pl);
+  },
+  weekClear:async function(){
+    if(!S.confirmWeek){S.confirmWeek=true;render();return}
+    var id=S.weekMon;delete S.plans[id];S.confirmWeek=false;render();await del('plans',id);toast('Uken er tømt');
+  },
+  gotoBuild:function(){closeSheet();S.tab='antrekk';S.antMode='bygg';render();window.scrollTo(0,0)},
+  packFromWeek:async function(){
+    var pl=S.plans[S.weekMon],ids=[];
+    if(pl)Object.keys(pl.days).forEach(function(k){
+      (pl.days[k].outfits||[]).map(outfitById).filter(Boolean).forEach(function(o){
+        outfitGarmentIds(o).forEach(function(id){if(ids.indexOf(id)<0)ids.push(id)});
+      });
+    });
+    if(!ids.length){toast('Ingen plagg i antrekkene denne uken');return}
+    var pk={id:uid(),name:'Uke '+isoWeek(parseD(S.weekMon)),created:Date.now(),items:[]};
+    addGarmentsToPack(pk,ids);
+    S.packs.push(pk);S.planMode='pakk';S.packOpen=pk.id;render();window.scrollTo(0,0);
+    await savePack(pk);toast('Pakkeliste laget fra uken');
+  },
+  packCreate:async function(){
+    var pk={id:uid(),name:(S.packName||'').trim()||'Pakkeliste',created:Date.now(),items:[]};
+    S.packs.push(pk);S.packName='';S.packOpen=pk.id;render();await savePack(pk);
+  },
+  packOpen:function(d){S.packOpen=d.id;S.confirmDel=false;render();window.scrollTo(0,0)},
+  packBack:function(){S.packOpen=null;S.confirmDel=false;render()},
+  packTick:async function(d){
+    var pk=packById(S.packOpen),x=pk&&pk.items.filter(function(i){return i.id===d.id})[0];
+    if(!x)return;x.done=!x.done;render();await savePack(pk);
+  },
+  packDel:async function(d){
+    var pk=packById(S.packOpen);if(!pk)return;
+    pk.items=pk.items.filter(function(i){return i.id!==d.id});render();await savePack(pk);
+  },
+  packAddText:async function(){
+    var pk=packById(S.packOpen),t=(S.packText||'').trim();
+    if(!pk)return;
+    if(!t){toast('Skriv inn hva som skal pakkes');return}
+    pk.items.push({id:uid(),kind:'tekst',text:t,done:false});S.packText='';render();await savePack(pk);
+  },
+  packReset:async function(){
+    var pk=packById(S.packOpen);if(!pk)return;
+    pk.items.forEach(function(x){x.done=false});render();await savePack(pk);
+  },
+  packDelete:async function(){
+    if(!S.confirmDel){S.confirmDel=true;render();return}
+    var id=S.packOpen;S.packs=S.packs.filter(function(p){return p.id!==id});S.packOpen=null;S.confirmDel=false;
+    render();await del('packs',id);toast('Listen er slettet');
+  },
+  packAddGarments:function(){S.pcCat='alle';S.sheet='packadd';renderSheet(false)},
+  pcCat:function(d){S.pcCat=d.v;renderSheet(true)},
+  packToggle:async function(d){
+    var pk=packById(S.packOpen);if(!pk)return;
+    var idx=pk.items.findIndex(function(x){return x.kind==='plagg'&&x.ref===d.id});
+    if(idx>-1)pk.items.splice(idx,1);else pk.items.push({id:uid(),kind:'plagg',ref:d.id,done:false});
+    renderSheet(true);render();await savePack(pk);
+  },
+  packAddOutfit:function(){S.sheet='packout';renderSheet(false)},
+  packFromOutfit:async function(d){
+    var pk=packById(S.packOpen),o=outfitById(d.id);if(!pk||!o)return;
+    var n=addGarmentsToPack(pk,outfitGarmentIds(o));
+    closeSheet();render();await savePack(pk);
+    toast(n?'Lagt til '+n+' plagg':'Alle plaggene lå allerede på listen');
+  },
   antMode:function(d){S.antMode=d.v;render();window.scrollTo(0,0)},
   outfitOcc:function(d){S.outfitOcc=d.v;render()},
   openOutfitView:function(d){S.outfitView=d.id;S.confirmDel=false;S.sheet='outfit';renderSheet(false)},
@@ -1321,6 +1594,17 @@ document.addEventListener('click',function(e){
 });
 document.addEventListener('input',function(e){
   var f=e.target.dataset&&e.target.dataset.f;if(!f)return;
+  if(f==='daynote'){
+    var di=+e.target.dataset.day,pl=getPlan(S.weekMon),dd=getDay(pl,di);
+    dd.note=e.target.value;saveSoon('plan',function(){savePlan(pl)});return;
+  }
+  if(f==='packname'){S.packName=e.target.value;return}
+  if(f==='packtext'){S.packText=e.target.value;return}
+  if(f==='packtitle'){
+    var pk=packById(S.packOpen);
+    if(pk){pk.name=e.target.value;saveSoon('pack',function(){savePack(pk)})}
+    return;
+  }
   if(f==='tol'&&S.edit){S.edit.tol=+e.target.value;scheduleBg();return}
   if(f==='brush'&&S.edit){S.edit.brush=+e.target.value;return}
   if(f==='cname'&&S.cdraft){S.cdraft.name=e.target.value;return}
@@ -1407,6 +1691,7 @@ document.addEventListener('keydown',function(e){
   if(ok){
     try{
       S.items=await dbAll('items');S.outfits=await dbAll('outfits');S.wish=await dbAll('wish');
+      S.plans={};(await dbAll('plans')).forEach(function(pl){S.plans[pl.id]=pl});S.packs=await dbAll('packs');
       var metaDocs=await dbAll('meta');
       var lb=metaDocs.filter(function(m){return m.id==='lastBackup'})[0];S.lastBackup=lb?lb.at:'';
       S.items.forEach(function(i){i.tags=i.tags||[];i.seasons=i.seasons||[]});
