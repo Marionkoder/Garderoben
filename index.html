@@ -127,6 +127,12 @@ h2{margin:0}
 .cfield .cm2{flex:1;display:flex;align-items:flex-end;padding:10px;font-weight:600;font-size:12px;line-height:1.2}
 .gal{display:flex;gap:10px;overflow-x:auto;padding:6px 2px 10px;margin-top:6px}
 .gal .pick{flex:none;width:88px}
+.swcard{display:flex;flex-direction:column;gap:6px}
+.swc{position:relative}
+.goodbadge{position:absolute;top:8px;right:8px;width:28px;height:28px;border-radius:50%;background:var(--accent);color:var(--accent-ink);display:grid;place-items:center;z-index:2;box-shadow:0 1px 4px rgba(0,0,0,.3)}
+.swcard.good .bands{box-shadow:0 0 0 2px var(--accent)}
+.chip.mtch{width:100%;text-align:center;padding:6px 8px;font-size:13px}
+.chip.mtch[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
 .swgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:16px 12px;margin-top:10px}
 .swc{background:none;border:0;padding:0;text-align:left;color:inherit;font:inherit;cursor:pointer;display:block;width:100%}
 .swc:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
@@ -428,7 +434,7 @@ var MROWS=[
 
 var S={tab:'plagg',items:[],outfits:[],wish:[],colors:[],fOcc:'alle',fCat:'alle',fSeason:'alle',fGroup:'alle',fExtra:false,oSeason:'alle',oGroup:'alle',occ:'formelt',
   cur:{},curName:'',curId:null,storage:true,sheet:null,edit:null,picker:null,confirmDel:false,confirmOutfit:null,customText:'',
-  cdraft:null,colorFrom:null,editScroll:0,lastBackup:'',importData:null,mClosed:{hoytidelig:true,hverdag:true,fest:true,fritid:true},mSeason:'alle',plans:{},packs:[],projects:[],anchor:null,projOpen:null,projName:'',anCat:'alle',fUse:'alle',fSort:'navn',fFlat:false,shareText:'',planMode:'uke',weekMon:dstr(monOf(new Date())),planPickDay:0,ppOcc:'alle',pcCat:'alle',packOpen:null,packName:'',packText:'',confirmWeek:false,antMode:'bygg',outfitOcc:'alle',outfitView:null};
+  cdraft:null,colorFrom:null,editScroll:0,lastBackup:'',importData:null,mClosed:{hoytidelig:true,hverdag:true,fest:true,fritid:true},mSeason:'alle',plans:{},packs:[],projects:[],anchor:null,projOpen:null,projName:'',anCat:'alle',fUse:'alle',fSort:'navn',fFlat:false,projGood:false,shareText:'',planMode:'uke',weekMon:dstr(monOf(new Date())),planPickDay:0,ppOcc:'alle',pcCat:'alle',packOpen:null,packName:'',packText:'',confirmWeek:false,antMode:'bygg',outfitOcc:'alle',outfitView:null};
 
 /* ---------- helpers ---------- */
 function $(s){return document.querySelector(s)}
@@ -597,6 +603,8 @@ async function migrate(meta,allMeta){
     if(col!==it.color){it.color=col;ch=true}
     var c2k=(it.colors2||[]).filter(function(k){return keys.indexOf(k)>-1});
     if(c2k.length!==(it.colors2||[]).length){it.colors2=c2k;ch=true}
+    var gk=(it.goodColors||[]).filter(function(k){return keys.indexOf(k)>-1});
+    if(gk.length!==(it.goodColors||[]).length){it.goodColors=gk;ch=true}
     if(ch)await save('items',it);
   }
   for(var j=0;j<S.outfits.length;j++){
@@ -1238,14 +1246,24 @@ function projAnalysis(pr){
   h+='<div class="sw" style="margin-top:12px">'+swBtns('prSetColor',function(k){return pr.color===k})+'</div>';
   var rel=projRelevant(pr);
   if(!rel.length)return h+'<p class="hint">Du har ingen plagg å sette den mot'+(ctx?' for '+esc(ctx):'')+' ennå.</p>';
+  var main=colObj(pr.color);
+  function isGood(i){return !!pr.color&&(i.goodColors||[]).indexOf(pr.color)>-1}
+  var goodAll=S.items.filter(isGood).length,goodShown=rel.filter(isGood).length;
   h+='<p class="hint">Fargen står ved siden av hvert plagg du kan bruke den sammen med'+(ctx?' ('+esc(ctx)+')':'')+'. Du vurderer selv hva som passer, og kan trykke på en annen farge over for å se forskjellen.</p>';
+  h+='<p class="hint"><b>'+(goodAll?'Du har merket '+goodAll+(goodAll===1?' plagg':' plagg')+' som god match med '+esc(main.l)+(goodShown<goodAll?', og '+goodShown+' av dem vises her':'')+'.':'Du har ikke merket noen plagg som god match med '+esc(main.l)+' ennå.')+'</b> Trykk «God match?» under et plagg for å lagre det. Det huskes neste gang du tester denne fargen.</p>';
+  if(goodAll)h+='<div class="chips"><button class="chip" data-act="projGoodToggle" aria-pressed="'+S.projGood+'">Vis bare god match</button></div>';
+  var shown=S.projGood?rel.filter(isGood):rel;
+  if(!shown.length)return h+'<p class="hint">Ingen av plaggene som vises her, er merket som god match med '+esc(main.l)+'.</p>';
   CATS.forEach(function(c){
-    var arr=rel.filter(function(i){return i.cat===c.k}).sort(byNameCmp);
+    var arr=shown.filter(function(i){return i.cat===c.k}).sort(function(a,b){return (isGood(b)?1:0)-(isGood(a)?1:0)||byNameCmp(a,b)});
     if(!arr.length)return;
     h+='<h3 class="ph">'+esc(c.l)+'<span class="cnt">'+arr.length+'</span></h3><div class="swgrid">'+arr.map(function(i){
-      return '<button class="swc" data-act="openItem" data-id="'+i.id+'" aria-label="'+esc(i.name)+'">'+mount(i)+
+      var good=isGood(i);
+      return '<div class="swcard'+(good?' good':'')+'"><button class="swc" data-act="openItem" data-id="'+i.id+'" aria-label="'+esc(i.name)+(good?', god match':'')+'">'+
+        (good?'<span class="goodbadge" aria-hidden="true">'+TICK+'</span>':'')+mount(i)+
         '<span class="bands">'+cols.map(function(col,ix){return '<i style="background:'+esc(col.hex)+';flex:'+(ix?1:3)+'"></i>'}).join('')+'</span>'+
-        '<span class="nm2">'+esc(i.name)+'</span></button>';
+        '<span class="nm2">'+esc(i.name)+'</span></button>'+
+        '<button class="chip mtch" data-act="prMatch" data-id="'+i.id+'" aria-pressed="'+good+'">'+(good?'God match':'God match?')+'</button></div>';
     }).join('')+'</div>';
   });
   return h;
@@ -1474,6 +1492,11 @@ function editHTML(){
     '<div class="fld"><span class="lbl">Passer til</span><div class="chips wrap-chips">'+tg+'</div></div>'+
     '<div class="fld"><span class="lbl">Sesong</span><div class="chips wrap-chips">'+se+'</div></div>'+
     '<div class="fld"><span class="lbl">Bruk</span><button class="chip usechip" data-act="useToggle" aria-pressed="'+usedNow+'">'+(usedNow?TICK+' Brukt i '+yr:'Brukt i '+yr+'?')+'</button><p class="hint">'+esc(usedLineFor(e))+'.</p></div>'+
+    ((e.goodColors||[]).filter(function(k){return !colObj(k).none}).length
+      ?'<div class="fld"><span class="lbl">Gode fargematcher</span><div class="sw">'+(e.goodColors||[]).filter(function(k){return !colObj(k).none}).map(function(k){
+          var c=colObj(k);return '<button style="background:'+esc(c.hex)+'" data-act="goodRemove" data-v="'+esc(k)+'" aria-pressed="true" aria-label="Fjern '+esc(c.l)+'" title="'+esc(c.l)+'"></button>';
+        }).join('')+'</div><p class="hint">Fargene du har merket som god match med dette plagget i fargeplanleggeren. Trykk på en farge for å fjerne den.</p></div>'
+      :'')+
     '<h3>Detaljer, valgfritt</h3>'+
     '<label class="fld"><span>Merke</span><input data-f="brand" value="'+esc(e.brand)+'" placeholder="f.eks. Soaked in Luxury" autocomplete="off"></label>'+
     '<label class="fld"><span>Kjøpsår</span><input data-f="year" value="'+esc(e.year)+'" inputmode="numeric" maxlength="4" placeholder="f.eks. 2025" autocomplete="off"></label>'+
@@ -1567,7 +1590,7 @@ function readFileText(file){
   return new Promise(function(res,rej){var fr=new FileReader();fr.onload=function(){res(fr.result)};fr.onerror=function(){rej(new Error('read'))};fr.readAsText(file)});
 }
 function normImported(it){
-  it.tags=mapOcc(it.tags||[]);it.seasons=it.seasons||[];it.colors2=it.colors2||[];it.pattern=it.pattern||'';it.usedYears=it.usedYears||[];it.size=it.size||'';
+  it.tags=mapOcc(it.tags||[]);it.seasons=it.seasons||[];it.colors2=it.colors2||[];it.pattern=it.pattern||'';it.usedYears=it.usedYears||[];it.goodColors=it.goodColors||[];it.size=it.size||'';
   if(it.cat==='smoking'||it.cat==='dress')it.cat='blazer';
   if(it.cat==='slips'||it.cat==='belte')it.cat='tilbehor';
   return it;
@@ -1636,8 +1659,8 @@ function openEdit(id,preset){
   var it=id?byId(id):null;
   preset=preset||{};
   S.edit=it?Object.assign({},it,{tags:it.tags.slice(),seasons:(it.seasons||[]).slice()}):
-    {id:null,name:preset.name||'',size:'',cat:preset.cat||'blazer',color:preset.color||'',tags:preset.tags?preset.tags.slice():(preset.tag?[preset.tag]:[]),seasons:preset.seasons?preset.seasons.slice():(preset.season?[preset.season]:[]),usedYears:[],colors2:preset.colors2?preset.colors2.slice():[],pattern:preset.pattern||'',brand:preset.brand||'',year:'',materials:preset.materials||'',wash:'',care:'',note:preset.note||'',img:'',imgOrig:'',bg:'orig',tol:28,holes:true,seeds:[],tapMode:false,strokes:[],paintMode:false,brush:6};
-  if(it){S.edit.usedYears=(it.usedYears||[]).slice();S.edit.colors2=(it.colors2||[]).slice();S.edit.pattern=it.pattern||'';S.edit.bg=it.bgMode||(it.imgOrig?'krem':'orig');S.edit.strokes=JSON.parse(JSON.stringify(it.strokes||[]));S.edit.paintMode=false;S.edit.brush=6;S.edit.tol=it.tol||28;S.edit.imgOrig=it.imgOrig||'';S.edit.holes=it.bgHoles!==false;S.edit.seeds=(it.bgSeeds||[]).map(function(q){return q.slice()});S.edit.tapMode=false}
+    {id:null,name:preset.name||'',size:'',cat:preset.cat||'blazer',color:preset.color||'',tags:preset.tags?preset.tags.slice():(preset.tag?[preset.tag]:[]),seasons:preset.seasons?preset.seasons.slice():(preset.season?[preset.season]:[]),usedYears:[],goodColors:[],colors2:preset.colors2?preset.colors2.slice():[],pattern:preset.pattern||'',brand:preset.brand||'',year:'',materials:preset.materials||'',wash:'',care:'',note:preset.note||'',img:'',imgOrig:'',bg:'orig',tol:28,holes:true,seeds:[],tapMode:false,strokes:[],paintMode:false,brush:6};
+  if(it){S.edit.goodColors=(it.goodColors||[]).slice();S.edit.usedYears=(it.usedYears||[]).slice();S.edit.colors2=(it.colors2||[]).slice();S.edit.pattern=it.pattern||'';S.edit.bg=it.bgMode||(it.imgOrig?'krem':'orig');S.edit.strokes=JSON.parse(JSON.stringify(it.strokes||[]));S.edit.paintMode=false;S.edit.brush=6;S.edit.tol=it.tol||28;S.edit.imgOrig=it.imgOrig||'';S.edit.holes=it.bgHoles!==false;S.edit.seeds=(it.bgSeeds||[]).map(function(q){return q.slice()});S.edit.tapMode=false}
   S.confirmDel=false;S.sheet='edit';renderSheet(false);
 }
 
@@ -1798,6 +1821,7 @@ var H={
       var ch=false;
       if(i.color===id){i.color='';ch=true}
       if((i.colors2||[]).indexOf(id)>-1){i.colors2=i.colors2.filter(function(k){return k!==id});ch=true}
+      if((i.goodColors||[]).indexOf(id)>-1){i.goodColors=i.goodColors.filter(function(k){return k!==id});ch=true}
       if(ch)changed.push(i);
     });
     if(S.edit){if(S.edit.color===id)S.edit.color='';S.edit.colors2=(S.edit.colors2||[]).filter(function(k){return k!==id})}
@@ -1809,7 +1833,7 @@ var H={
   toggleTag:function(d){var t=S.edit.tags,i=t.indexOf(d.v);if(i>-1)t.splice(i,1);else t.push(d.v);renderSheet(true)},
   saveItem:async function(){
     var e=S.edit;
-    var obj={id:e.id||uid(),name:(e.name||'').trim()||catL(e.cat),cat:e.cat,color:e.color,colors2:(e.colors2||[]).filter(function(k){return k!==e.color}).slice(0,2),pattern:e.pattern||'',tags:e.tags.slice(),seasons:(e.seasons||[]).slice(),usedYears:(e.usedYears||[]).slice(),size:(e.size||'').trim(),brand:(e.brand||'').trim(),year:String(e.year||'').replace(/\D/g,'').slice(0,4),materials:(e.materials||'').trim(),wash:(e.wash||'').trim(),care:(e.care||'').trim(),note:e.note||'',img:e.img||'',imgOrig:((e.bg==='krem'||(e.strokes||[]).length)&&e.imgOrig)?e.imgOrig:'',bgMode:e.bg,strokes:((e.strokes||[]).length&&e.imgOrig)?e.strokes:[],tol:e.tol||28,bgHoles:e.holes!==false,bgSeeds:(e.bg==='krem'?(e.seeds||[]):[]),created:e.created||Date.now()};
+    var obj={id:e.id||uid(),name:(e.name||'').trim()||catL(e.cat),cat:e.cat,color:e.color,colors2:(e.colors2||[]).filter(function(k){return k!==e.color}).slice(0,2),pattern:e.pattern||'',tags:e.tags.slice(),seasons:(e.seasons||[]).slice(),usedYears:(e.usedYears||[]).slice(),goodColors:(e.goodColors||[]).slice(),size:(e.size||'').trim(),brand:(e.brand||'').trim(),year:String(e.year||'').replace(/\D/g,'').slice(0,4),materials:(e.materials||'').trim(),wash:(e.wash||'').trim(),care:(e.care||'').trim(),note:e.note||'',img:e.img||'',imgOrig:((e.bg==='krem'||(e.strokes||[]).length)&&e.imgOrig)?e.imgOrig:'',bgMode:e.bg,strokes:((e.strokes||[]).length&&e.imgOrig)?e.strokes:[],tol:e.tol||28,bgHoles:e.holes!==false,bgSeeds:(e.bg==='krem'?(e.seeds||[]):[]),created:e.created||Date.now()};
     var idx=S.items.findIndex(function(i){return i.id===obj.id});
     if(idx>-1)S.items[idx]=obj;else S.items.push(obj);
     closeSheet();render();
@@ -1925,6 +1949,20 @@ var H={
   },
   prOpen:function(d){S.projOpen=d.id;S.confirmDel=false;render();window.scrollTo(0,0)},
   prBack:function(){S.projOpen=null;S.confirmDel=false;render()},
+  projGoodToggle:function(){S.projGood=!S.projGood;render()},
+  prMatch:async function(d){
+    var pr=projById(S.projOpen),it=byId(d.id);
+    if(!pr||!it||!pr.color)return;
+    var a=it.goodColors||(it.goodColors=[]),ix=a.indexOf(pr.color);
+    if(ix>-1)a.splice(ix,1);else a.push(pr.color);
+    render();await save('items',it);
+    toast(ix>-1?'Fjernet som god match':'Lagret som god match');
+  },
+  goodRemove:function(d){
+    var e=S.edit;if(!e)return;
+    e.goodColors=(e.goodColors||[]).filter(function(k){return k!==d.v});
+    renderSheet(true);
+  },
   prStatus:function(d){return projEdit(function(pr){pr.status=d.v})},
   prTag:function(d){return projEdit(function(pr){var i=pr.tags.indexOf(d.v);if(i>-1)pr.tags.splice(i,1);else pr.tags.push(d.v)})},
   prSeason:function(d){return projEdit(function(pr){var i=pr.seasons.indexOf(d.v);if(i>-1)pr.seasons.splice(i,1);else pr.seasons.push(d.v)})},
