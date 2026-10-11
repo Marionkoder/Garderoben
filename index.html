@@ -107,10 +107,10 @@ h2{margin:0}
 }
 .pgrid{display:grid;grid-template-columns:1.25fr 1fr 1fr;gap:8px}
 .pacc{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px}
-.slot.acc{aspect-ratio:1/.95}
+.slot.acc{aspect-ratio:1/.95;min-width:0;min-height:0}
 .slot{position:relative;aspect-ratio:1/1.1;border:1.5px dashed rgba(247,239,218,.6);border-radius:6px;background:transparent;color:var(--chalk);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:500 12.5px/1.25 var(--body);text-align:center;padding:6px;cursor:pointer;overflow:hidden}
-.slot.tall{grid-row:span 2;aspect-ratio:1/2.2;align-self:stretch;min-height:0}
+.slot.tall{grid-column:2/4;grid-row:span 2;aspect-ratio:1/.95;align-self:stretch;min-height:0;min-width:0}
 .slot.coat{grid-row:1/4;aspect-ratio:auto;align-self:stretch;min-height:0}
 .slot.filled{border:1.5px solid var(--chalk);padding:0;background:var(--mount);display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0}
 .slot.filled .mount{flex:1 1 0;min-height:0;aspect-ratio:auto;border-radius:0;width:100%}
@@ -372,7 +372,7 @@ var CATS=[
   {k:'skjoert',l:'Skjørt'},{k:'kjole',l:'Kjole / buksedress'},{k:'badetoy',l:'Badetøy'},{k:'sko',l:'Sko'},
   {k:'smykker',l:'Smykker'},{k:'vesker',l:'Vesker'},{k:'tilbehor',l:'Tilbehør'}
 ];
-var OCCS=[{k:'formelt',l:'Formelt'},{k:'hoytidelig',l:'Høytidelig'},{k:'hverdag',l:'Hverdag'},{k:'fest',l:'Fest'},{k:'fritid',l:'Fritid og trening'}];
+var OCCS=[{k:'formelt',l:'Formelt'},{k:'hoytidelig',l:'Høytidelig'},{k:'lettpyntet',l:'Lett pyntet'},{k:'hverdag',l:'Hverdag'},{k:'fest',l:'Fest'},{k:'fritid',l:'Fritid og trening'}];
 var DEFAULT_COLORS=[
   {k:'svart',l:'Svart',hex:'#1b1c1f',g:'svart'},
   {k:'hvit',l:'Hvit',hex:'#f7f7f4',g:'hvit'},
@@ -418,10 +418,12 @@ var SLOTS=[
   {k:'jakke',l:'Dressjakke',cats:['blazer']},
   {k:'overdel',l:'Bluse, genser eller topp',cats:['skjorte','genser','topp']},
   {k:'underdel',l:'Bukse, skjørt, kjole eller badetøy',cats:['bukse','skjoert','kjole','badetoy'],tall:true},
-  {k:'sko',l:'Sko',cats:['sko'],tall:true},
+  {k:'sko',l:'Sko',cats:['sko'],acc:true},
   {k:'smykker',l:'Smykker',cats:['smykker'],acc:true},
   {k:'veske',l:'Veske',cats:['vesker'],acc:true},
-  {k:'tilbehor',l:'Tilbehør',cats:['tilbehor'],acc:true}
+  {k:'tilbehor',l:'Tilbehør',cats:['tilbehor'],acc:true},
+  {k:'tilbehor2',l:'Tilbehør 2',cats:['tilbehor'],acc:true},
+  {k:'tilbehor3',l:'Tilbehør 3',cats:['tilbehor'],acc:true}
 ];
 /* rows shown under every occasion on the Mangler tab, in this order */
 var MEXCL={hverdag:['blazer'],fest:['blazer'],fritid:['blazer','smykker','skjoert','kjole','skjorte']}; /* rows left out unless they already hold garments */
@@ -434,7 +436,7 @@ var MROWS=[
 
 var S={tab:'plagg',items:[],outfits:[],wish:[],colors:[],fOcc:'alle',fCat:'alle',fSeason:'alle',fGroup:'alle',fExtra:false,oSeason:'alle',oGroup:'alle',occ:'formelt',
   cur:{},curName:'',curId:null,storage:true,sheet:null,edit:null,picker:null,confirmDel:false,confirmOutfit:null,customText:'',
-  cdraft:null,colorFrom:null,editScroll:0,lastBackup:'',importData:null,mClosed:{hoytidelig:true,hverdag:true,fest:true,fritid:true},mSeason:'alle',plans:{},packs:[],projects:[],anchor:null,projOpen:null,projName:'',anCat:'alle',fUse:'alle',fSort:'navn',fFlat:false,projGood:false,shareText:'',planMode:'uke',weekMon:dstr(monOf(new Date())),planPickDay:0,ppOcc:'alle',pcCat:'alle',packOpen:null,packName:'',packText:'',confirmWeek:false,antMode:'bygg',outfitOcc:'alle',outfitView:null};
+  cdraft:null,colorFrom:null,editScroll:0,lastBackup:'',importData:null,mClosed:{hoytidelig:true,lettpyntet:true,hverdag:true,fest:true,fritid:true},mSeason:'alle',plans:{},packs:[],projects:[],anchor:null,projOpen:null,projName:'',anCat:'alle',fUse:'alle',fSort:'navn',fFlat:false,projGood:false,shareText:'',planMode:'uke',weekMon:dstr(monOf(new Date())),planPickDay:0,ppOcc:'alle',pcCat:'alle',packOpen:null,packName:'',packText:'',confirmWeek:false,antMode:'bygg',outfitOcc:'alle',outfitView:null};
 
 /* ---------- helpers ---------- */
 function $(s){return document.querySelector(s)}
@@ -1345,7 +1347,10 @@ function packoutHTML(){
 
 /* ---------- colour field and build-out ---------- */
 function itemColors(i){return [colObj(i.color)].concat((i.colors2||[]).map(colObj)).filter(function(c){return !c.none})}
-function slotFor(i){return SLOTS.filter(function(x){return x.cats.indexOf(i.cat)>-1})[0]}
+function slotFor(i){
+  var m=SLOTS.filter(function(x){return x.cats.indexOf(i.cat)>-1});
+  return m.filter(function(x){return S.cur[x.k]===i.id})[0]||m.filter(function(x){return !byId(S.cur[x.k])})[0]||m[0];
+}
 function galleryHTML(){
   if(S.oSeason==='alle'&&S.oGroup==='alle')return '';
   var list=S.items.filter(function(i){return slotFor(i)&&outfitFilterOk(i)}).sort(function(a,b){
@@ -1382,7 +1387,7 @@ function fillRest(){
   function rnd(a){return a[Math.floor(Math.random()*a.length)]}
   function pick(slot,cats){
     if(byId(cur[slot]))return null;
-    var p=pool(cats);
+    var p=pool(cats).filter(function(i){return Object.keys(cur).every(function(k){return cur[k]!==i.id})});
     if(!p.length)return null;
     var it=rnd(p);cur[slot]=it.id;return it;
   }
@@ -1399,6 +1404,7 @@ function fillRest(){
   pick('smykker',['smykker']);
   pick('veske',['vesker']);
   pick('tilbehor',['tilbehor']);
+  if(S.oSeason==='vinter'){pick('tilbehor2',['tilbehor']);pick('tilbehor3',['tilbehor'])}
 }
 function anchorHTML(){
   var list=S.items.filter(function(i){return S.anCat==='alle'||i.cat===S.anCat}).sort(function(a,b){
@@ -1689,7 +1695,13 @@ function suggest(){
   if((p=pool(['sko'])).length) out.sko=rnd(p).id;
   if((p=pool(['smykker'])).length) out.smykker=rnd(p).id;
   if((p=pool(['vesker'])).length) out.veske=rnd(p).id;
-  if((p=pool(['tilbehor'])).length) out.tilbehor=rnd(p).id;
+  if((p=pool(['tilbehor'])).length){
+    p=p.slice();
+    ['tilbehor','tilbehor2','tilbehor3'].forEach(function(k,n){
+      if(!p.length||(n>0&&S.oSeason!=='vinter'))return;
+      var x=p.splice(Math.floor(Math.random()*p.length),1)[0];out[k]=x.id;
+    });
+  }
   S.cur=out;S.curId=null;render();
 }
 
@@ -2010,6 +2022,7 @@ var H={
   clearOFilters:function(){S.oSeason='alle';S.oGroup='alle';render();renderSheet(true)},
   pickSlot:function(d){S.picker=d.k;S.sheet='pick';renderSheet(false)},
   pick:function(d){
+    Object.keys(S.cur).forEach(function(k){if(k!==S.picker&&S.cur[k]===d.id&&k.indexOf('tilbehor')===0)delete S.cur[k]});
     S.cur[S.picker]=d.id;
     var it=byId(d.id);
     closeSheet();render();
