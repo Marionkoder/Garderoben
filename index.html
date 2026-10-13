@@ -86,7 +86,6 @@ h2{margin:0}
 .item .nm{display:block;margin-top:8px;font-weight:600;font-size:15px;line-height:1.25}
 .meta{display:flex;align-items:center;gap:6px;color:var(--muted);font-size:13px;margin-top:2px}
 .dots{display:inline-flex;align-items:center;gap:3px;flex:none}
-.dot.sm{width:8px;height:8px}
 .dot.ring{background:conic-gradient(#d90429,#f4a300,#ffe14d,#4cb050,#2a9df4,#8e44ad,#d90429)}
 .sw button[disabled]{cursor:not-allowed}
 .dot{width:10px;height:10px;border-radius:50%;border:1px solid rgba(0,0,0,.28);display:inline-block;flex:none}
@@ -468,7 +467,7 @@ function extraToggle(sel){
 function colorDots(i){
   var c=colObj(i.color),out='';
   if(!c.none)out+='<i class="dot" style="background:'+esc(c.hex)+'" title="'+esc(c.l)+'"></i>';
-  (i.colors2||[]).forEach(function(k){var x=colObj(k);if(!x.none)out+='<i class="dot sm" style="background:'+esc(x.hex)+'" title="'+esc(x.l)+'"></i>'});
+  (i.colors2||[]).forEach(function(k){var x=colObj(k);if(!x.none)out+='<i class="dot" style="background:'+esc(x.hex)+'" title="'+esc(x.l)+'"></i>'});
   if(i.pattern==='flerfarget')out+='<i class="dot ring" title="Flerfarget mønster"></i>';
   return out?'<span class="dots">'+out+'</span>':'';
 }
