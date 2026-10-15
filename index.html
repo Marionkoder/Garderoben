@@ -110,7 +110,8 @@ h2{margin:0}
 .slot{position:relative;aspect-ratio:1/1.1;border:1.5px dashed rgba(247,239,218,.6);border-radius:6px;background:transparent;color:var(--chalk);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;font:500 12.5px/1.25 var(--body);text-align:center;padding:6px;cursor:pointer;overflow:hidden}
 .slot.tall{grid-column:2/4;grid-row:span 2;aspect-ratio:1/.95;align-self:stretch;min-height:0;min-width:0}
-.slot.coat{grid-row:1/4;aspect-ratio:auto;align-self:stretch;min-height:0}
+.slot.wide{grid-column:2/4;aspect-ratio:2.1/1.05;min-width:0;min-height:0}
+.slot.coat{grid-row:1/5;aspect-ratio:auto;align-self:stretch;min-height:0}
 .slot.filled{border:1.5px solid var(--chalk);padding:0;background:var(--mount);display:flex;flex-direction:column;align-items:stretch;justify-content:flex-start;gap:0}
 .slot.filled .mount{flex:1 1 0;min-height:0;aspect-ratio:auto;border-radius:0;width:100%}
 .slot .nm{flex:none;width:100%;padding:5px 8px;background:rgba(70,8,28,.9);color:var(--chalk);font-size:12px;text-align:left;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -416,9 +417,12 @@ var SLOTS=[
   {k:'yttertoy',l:'Yttertøy',cats:['yttertoy'],coat:true},
   {k:'jakke',l:'Dressjakke',cats:['blazer']},
   {k:'overdel',l:'Bluse, genser eller topp',cats:['skjorte','genser','topp']},
+  {k:'overdel2',l:'Genser, cardigan eller jakke utenpå',cats:['genser','blazer'],wide:true},
   {k:'underdel',l:'Bukse, skjørt, kjole eller badetøy',cats:['bukse','skjoert','kjole','badetoy'],tall:true},
   {k:'sko',l:'Sko',cats:['sko'],acc:true},
   {k:'smykker',l:'Smykker',cats:['smykker'],acc:true},
+  {k:'smykker2',l:'Smykker 2',cats:['smykker'],acc:true},
+  {k:'smykker3',l:'Smykker 3',cats:['smykker'],acc:true},
   {k:'veske',l:'Veske',cats:['vesker'],acc:true},
   {k:'tilbehor',l:'Tilbehør',cats:['tilbehor'],acc:true},
   {k:'tilbehor2',l:'Tilbehør 2',cats:['tilbehor'],acc:true},
@@ -535,8 +539,12 @@ var CHECK='<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><c
 var OPEN='<svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9.5" fill="none" stroke="var(--muted)" stroke-width="1.5" stroke-dasharray="3 3"/></svg>';
 var CLOSE='<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg>';
 
+var TONES={krem:{rgb:[237,226,200],hex:'#EDE2C8'},mork:{rgb:[203,190,166],hex:'#CBBEA6'}};
+function isLightColor(k){var c=colObj(k);return !c.none&&cg(c)==='hvit'}
+function effTone(color,pick){return pick||(isLightColor(color)?'mork':'krem')}
+function toneHex(i){return (i&&i.bgTone==='mork')?TONES.mork.hex:TONES.krem.hex}
 function mount(i){
-  if(i.img) return '<div class="mount"><img src="'+i.img+'" alt="'+esc(i.name)+'"></div>';
+  if(i.img) return '<div class="mount"'+(i.bgTone==='mork'?' style="background:'+TONES.mork.hex+'"':'')+'><img src="'+i.img+'" alt="'+esc(i.name)+'"></div>';
   var c=colObj(i.color);
   return '<div class="mount ph" style="background:'+c.hex+';color:'+(isDark(c.hex)?'#f3f3f0':'#1c2533')+'"><span>'+esc(catL(i.cat))+'</span></div>';
 }
@@ -700,7 +708,7 @@ function cleanBg(d,w,h,tol,opts){
   });
   coverage=count/N;
 
-  var CR=237,CG=226,CB=200,edge=[];
+  var rgb0=opts.rgb||[237,226,200],CR=rgb0[0],CG=rgb0[1],CB=rgb0[2],edge=[];
   for(var q2=0;q2<N;q2++){
     if(mask[q2])continue;
     var qx2=q2%w,qy2=(q2-qx2)/w;
@@ -714,8 +722,8 @@ function cleanBg(d,w,h,tol,opts){
   return coverage;
 }
 /* hand-drawn strokes in cream, stored as normalised points so they can always be undone */
-function drawStrokes(x,w,h,strokes){
-  x.fillStyle='#ede2c8';x.strokeStyle='#ede2c8';x.lineCap='round';x.lineJoin='round';
+function drawStrokes(x,w,h,strokes,hex){
+  hex=hex||'#ede2c8';x.fillStyle=hex;x.strokeStyle=hex;x.lineCap='round';x.lineJoin='round';
   strokes.forEach(function(st){
     var R=st.r*w;
     if(!st.pts||!st.pts.length)return;
@@ -735,10 +743,10 @@ function composeImage(dataUrl,o){
       var x=c.getContext('2d');x.drawImage(im,0,0);
       var status='ok',strokes=o.strokes||[];
       if(o.cream){
-        var id=x.getImageData(0,0,w,h),cov=cleanBg(id.data,w,h,o.tol,{holes:o.holes,seeds:o.seeds});
+        var id=x.getImageData(0,0,w,h),cov=cleanBg(id.data,w,h,o.tol,{holes:o.holes,seeds:o.seeds,rgb:(TONES[o.tone]||TONES.krem).rgb});
         if(cov<0.02)status='none';else if(cov>0.93)status='toomuch';else x.putImageData(id,0,0);
       }
-      drawStrokes(x,w,h,strokes);
+      drawStrokes(x,w,h,strokes,(TONES[o.tone]||TONES.krem).hex);
       var untouched=(status!=='ok'&&!strokes.length);
       res({url:untouched?dataUrl:c.toDataURL('image/jpeg',0.92),status:status});
     };
@@ -752,7 +760,7 @@ async function reprocessImg(){
   try{
     var r;
     if(e.bg!=='krem'&&!strokes.length)r={url:e.imgOrig,status:'ok'};
-    else r=await composeImage(e.imgOrig,{cream:e.bg==='krem',tol:e.tol,holes:e.holes!==false,seeds:e.seeds||[],strokes:strokes});
+    else r=await composeImage(e.imgOrig,{cream:e.bg==='krem',tone:e.bg==='krem'?effTone(e.color,e.tone):'krem',tol:e.tol,holes:e.holes!==false,seeds:e.seeds||[],strokes:strokes});
     if(my!==bgToken||S.edit!==e)return;
     e.img=r.url;var im=document.querySelector('.photo .mount img');if(im)im.src=r.url;
   }catch(err){}
@@ -764,10 +772,10 @@ function scheduleBg(){
 function paintHTML(e){
   var n=(e.strokes||[]).length;
   return '<div class="fld"><span class="lbl">Rydd opp i bildet</span><div class="chips wrap-chips">'+
-    '<button class="chip" data-act="paintToggle" aria-pressed="'+(!!e.paintMode)+'">Tegn med krem</button>'+
+    '<button class="chip" data-act="paintToggle" aria-pressed="'+(!!e.paintMode)+'">Tegn med bakgrunnsfarge</button>'+
     (n?'<button class="chip" data-act="strokeUndo">Angre siste strek ('+n+')</button>':'')+'</div>'+
     (e.paintMode?'<label class="rng"><span>Penselstørrelse</span><input type="range" min="1" max="20" step="0.5" value="'+(e.brush||6)+'" data-f="brush" aria-label="Penselstørrelse"></label>':'')+
-    '<p class="hint">'+(e.paintMode?'Tegn eller prikk på støyen med fingeren, så blir bildet kremfarget der du tegner. Du kan angre strek for strek.':'Tegn over støy, flekker eller rester med kremfarge. Strekene ligger oppå bildet og kan angres.')+'</p></div>';
+    '<p class="hint">'+(e.paintMode?'Tegn eller prikk på støyen med fingeren, så blir bildet bakgrunnsfarget der du tegner. Du kan angre strek for strek.':'Tegn over støy, flekker eller rester med bakgrunnsfargen. Strekene ligger oppå bildet og kan angres.')+'</p></div>';
 }
 
 /* ---------- views ---------- */
@@ -830,7 +838,7 @@ function foot(){
 }
 
 function slotTile(s){
-  var it=byId(S.cur[s.k]),w=s.coat?' coat':(s.tall?' tall':'');
+  var it=byId(S.cur[s.k]),w=s.coat?' coat':(s.tall?' tall':(s.wide?' wide':''));
   if(s.acc)w=' acc';
   return it
     ? '<button class="slot filled'+w+'" data-act="pickSlot" data-k="'+s.k+'" aria-label="'+esc(s.l)+': '+esc(it.name)+'. Bytt plagg">'+mount(it)+'<span class="nm">'+esc(it.name)+'</span></button>'
@@ -1187,7 +1195,7 @@ async function outfitBlob(o){
     var offset=(cols-inRow)*(cw+gap)/2;
     var tx=pad+offset+col*(cw+gap),ty=headH+row*(ch+gap);
     x.save();rrect(x,tx,ty,cw,ch,18);x.clip();
-    x.fillStyle='#EDE2C8';x.fillRect(tx,ty,cw,ch);
+    x.fillStyle=toneHex(its[k]);x.fillRect(tx,ty,cw,ch);
     var im=imgs[k];
     if(im){
       var sc=Math.min(cw/im.width,ch/im.height),dw=im.width*sc,dh=im.height*sc;
@@ -1449,7 +1457,7 @@ function render(){
 function editHTML(){
   var e=S.edit,isNew=!e.id;
   var photo=e.img
-    ? '<div class="photo"><div class="mount'+((e.tapMode||e.paintMode)?' tapmode':'')+'"><img src="'+e.img+'" alt="Bilde av plagget"'+(e.tapMode?' data-act="photoTap" class="tapping"':(e.paintMode?' class="painting"':''))+'></div></div><button class="sm swap" data-act="pickFile">Bytt bilde</button>'
+    ? '<div class="photo"><div class="mount'+((e.tapMode||e.paintMode)?' tapmode':'')+'"'+(e.bg==='krem'?' style="background:'+TONES[effTone(e.color,e.tone)].hex+'"':'')+'><img src="'+e.img+'" alt="Bilde av plagget"'+(e.tapMode?' data-act="photoTap" class="tapping"':(e.paintMode?' class="painting"':''))+'></div></div><button class="sm swap" data-act="pickFile">Bytt bilde</button>'
     : '<label class="photo photo-empty" for="file"><span><b>Legg til bilde</b>Ta et bilde eller velg fra biblioteket</span></label>';
   var sw=sortedColors().map(function(c){
     return '<button style="background:'+esc(c.hex)+'" data-act="setColor" data-v="'+esc(c.k)+'" aria-pressed="'+(e.color===c.k)+'" aria-label="'+esc(c.l)+'" title="'+esc(c.l)+'"></button>';
@@ -1479,7 +1487,12 @@ function editHTML(){
     (e.img?'<div class="fld"><span class="lbl">Bakgrunn på bildet</span><div class="chips wrap-chips">'+
       '<button class="chip" data-act="bgSet" data-v="orig" aria-pressed="'+(e.bg!=='krem')+'">Original</button>'+
       '<button class="chip" data-act="bgSet" data-v="krem" aria-pressed="'+(e.bg==='krem')+'">Krem</button></div>'+
-      (e.bg==='krem'?'<label class="rng"><span>Følsomhet</span><input type="range" min="8" max="70" value="'+(e.tol||28)+'" data-f="tol" aria-label="Følsomhet for bakgrunn"></label>'+
+      (e.bg==='krem'?'<div class="chips wrap-chips" style="margin-top:10px"><span class="lbl" style="margin:0 6px 0 0;align-self:center">Farge</span>'+
+        '<button class="chip" data-act="bgTone" data-v="auto" aria-pressed="'+(!e.tone)+'">Automatisk</button>'+
+        '<button class="chip" data-act="bgTone" data-v="krem" aria-pressed="'+(e.tone==='krem')+'">Krem</button>'+
+        '<button class="chip" data-act="bgTone" data-v="mork" aria-pressed="'+(e.tone==='mork')+'">Mørkere</button></div>'+
+        '<p class="hint">Automatisk gir mørkere bakgrunn på hvite og kremfargede plagg, så de skiller seg ut. Andre plagg får krem.</p>'+
+        '<label class="rng"><span>Følsomhet</span><input type="range" min="8" max="70" value="'+(e.tol||28)+'" data-f="tol" aria-label="Følsomhet for bakgrunn"></label>'+
       '<div class="chips wrap-chips" style="margin-top:10px">'+
         '<button class="chip" data-act="bgHoles" aria-pressed="'+(e.holes!==false)+'">Fyll lukkede områder</button>'+
         '<button class="chip" data-act="bgTap" aria-pressed="'+(!!e.tapMode)+'">Trykk for å fylle</button>'+
@@ -1665,7 +1678,7 @@ function openEdit(id,preset){
   preset=preset||{};
   S.edit=it?Object.assign({},it,{tags:it.tags.slice(),seasons:(it.seasons||[]).slice()}):
     {id:null,name:preset.name||'',size:'',cat:preset.cat||'blazer',color:preset.color||'',tags:preset.tags?preset.tags.slice():(preset.tag?[preset.tag]:[]),seasons:preset.seasons?preset.seasons.slice():(preset.season?[preset.season]:[]),usedYears:[],goodColors:[],colors2:preset.colors2?preset.colors2.slice():[],pattern:preset.pattern||'',brand:preset.brand||'',year:'',materials:preset.materials||'',wash:'',care:'',note:preset.note||'',img:'',imgOrig:'',bg:'orig',tol:28,holes:true,seeds:[],tapMode:false,strokes:[],paintMode:false,brush:6};
-  if(it){S.edit.goodColors=(it.goodColors||[]).slice();S.edit.usedYears=(it.usedYears||[]).slice();S.edit.colors2=(it.colors2||[]).slice();S.edit.pattern=it.pattern||'';S.edit.bg=it.bgMode||(it.imgOrig?'krem':'orig');S.edit.strokes=JSON.parse(JSON.stringify(it.strokes||[]));S.edit.paintMode=false;S.edit.brush=6;S.edit.tol=it.tol||28;S.edit.imgOrig=it.imgOrig||'';S.edit.holes=it.bgHoles!==false;S.edit.seeds=(it.bgSeeds||[]).map(function(q){return q.slice()});S.edit.tapMode=false}
+  if(it){S.edit.goodColors=(it.goodColors||[]).slice();S.edit.usedYears=(it.usedYears||[]).slice();S.edit.colors2=(it.colors2||[]).slice();S.edit.pattern=it.pattern||'';S.edit.bg=it.bgMode||(it.imgOrig?'krem':'orig');S.edit.strokes=JSON.parse(JSON.stringify(it.strokes||[]));S.edit.paintMode=false;S.edit.brush=6;S.edit.tol=it.tol||28;S.edit.imgOrig=it.imgOrig||'';S.edit.holes=it.bgHoles!==false;S.edit.seeds=(it.bgSeeds||[]).map(function(q){return q.slice()});S.edit.tapMode=false;S.edit.tone=it.tonePick||''}
   S.confirmDel=false;S.sheet='edit';renderSheet(false);
 }
 
@@ -1767,7 +1780,7 @@ var H={
       if(fresh)e.imgOrig=e.img;
       if(!e.tol)e.tol=28;
       try{
-        var r=await composeImage(e.imgOrig,{cream:true,tol:e.tol,holes:e.holes!==false,seeds:e.seeds||[],strokes:e.strokes||[]});
+        var r=await composeImage(e.imgOrig,{cream:true,tone:effTone(e.color,e.tone),tol:e.tol,holes:e.holes!==false,seeds:e.seeds||[],strokes:e.strokes||[]});
         if(r.status==='none'){
           if(fresh)e.imgOrig='';
           e.bg='orig';renderSheet(true);toast('Fant ingen jevn bakgrunn langs kanten å bytte ut');return;
@@ -1782,7 +1795,13 @@ var H={
     }
     renderSheet(true);
   },
-  setColor:function(d){S.edit.color=(S.edit.color===d.v)?'':d.v;S.edit.colors2=(S.edit.colors2||[]).filter(function(k){return k!==S.edit.color});renderSheet(true)},
+  bgTone:function(d){var e=S.edit;if(!e)return;e.tone=d.v==='auto'?'':d.v;renderSheet(true);reprocessImg()},
+  setColor:function(d){
+    var e=S.edit,before=effTone(e.color,e.tone);
+    e.color=(e.color===d.v)?'':d.v;e.colors2=(e.colors2||[]).filter(function(k){return k!==e.color});
+    renderSheet(true);
+    if(e.bg==='krem'&&e.imgOrig&&effTone(e.color,e.tone)!==before)reprocessImg();
+  },
   color2Toggle:function(d){
     var e=S.edit,t=e.colors2||(e.colors2=[]),i=t.indexOf(d.v);
     if(i>-1)t.splice(i,1);
@@ -1844,7 +1863,7 @@ var H={
   toggleTag:function(d){var t=S.edit.tags,i=t.indexOf(d.v);if(i>-1)t.splice(i,1);else t.push(d.v);renderSheet(true)},
   saveItem:async function(){
     var e=S.edit;
-    var obj={id:e.id||uid(),name:(e.name||'').trim()||catL(e.cat),cat:e.cat,color:e.color,colors2:(e.colors2||[]).filter(function(k){return k!==e.color}).slice(0,2),pattern:e.pattern||'',tags:e.tags.slice(),seasons:(e.seasons||[]).slice(),usedYears:(e.usedYears||[]).slice(),goodColors:(e.goodColors||[]).slice(),size:(e.size||'').trim(),brand:(e.brand||'').trim(),year:String(e.year||'').replace(/\D/g,'').slice(0,4),materials:(e.materials||'').trim(),wash:(e.wash||'').trim(),care:(e.care||'').trim(),note:e.note||'',img:e.img||'',imgOrig:((e.bg==='krem'||(e.strokes||[]).length)&&e.imgOrig)?e.imgOrig:'',bgMode:e.bg,strokes:((e.strokes||[]).length&&e.imgOrig)?e.strokes:[],tol:e.tol||28,bgHoles:e.holes!==false,bgSeeds:(e.bg==='krem'?(e.seeds||[]):[]),created:e.created||Date.now()};
+    var obj={id:e.id||uid(),name:(e.name||'').trim()||catL(e.cat),cat:e.cat,color:e.color,colors2:(e.colors2||[]).filter(function(k){return k!==e.color}).slice(0,2),pattern:e.pattern||'',tags:e.tags.slice(),seasons:(e.seasons||[]).slice(),usedYears:(e.usedYears||[]).slice(),goodColors:(e.goodColors||[]).slice(),size:(e.size||'').trim(),brand:(e.brand||'').trim(),year:String(e.year||'').replace(/\D/g,'').slice(0,4),materials:(e.materials||'').trim(),wash:(e.wash||'').trim(),care:(e.care||'').trim(),note:e.note||'',img:e.img||'',imgOrig:((e.bg==='krem'||(e.strokes||[]).length)&&e.imgOrig)?e.imgOrig:'',bgMode:e.bg,bgTone:e.bg==='krem'?effTone(e.color,e.tone):'',tonePick:e.tone||'',strokes:((e.strokes||[]).length&&e.imgOrig)?e.strokes:[],tol:e.tol||28,bgHoles:e.holes!==false,bgSeeds:(e.bg==='krem'?(e.seeds||[]):[]),created:e.created||Date.now()};
     var idx=S.items.findIndex(function(i){return i.id===obj.id});
     if(idx>-1)S.items[idx]=obj;else S.items.push(obj);
     closeSheet();render();
@@ -2021,7 +2040,7 @@ var H={
   clearOFilters:function(){S.oSeason='alle';S.oGroup='alle';render();renderSheet(true)},
   pickSlot:function(d){S.picker=d.k;S.sheet='pick';renderSheet(false)},
   pick:function(d){
-    Object.keys(S.cur).forEach(function(k){if(k!==S.picker&&S.cur[k]===d.id&&k.indexOf('tilbehor')===0)delete S.cur[k]});
+    Object.keys(S.cur).forEach(function(k){if(k!==S.picker&&S.cur[k]===d.id)delete S.cur[k]});
     S.cur[S.picker]=d.id;
     var it=byId(d.id);
     closeSheet();render();
@@ -2229,6 +2248,22 @@ document.addEventListener('keydown',function(e){
   }else{S.storage=false;S.colors=DEFAULT_COLORS.map(function(c){return Object.assign({},c)})}
   S.antMode=S.outfits.length?'vis':'bygg';
   render();
+  /* one-time pass: light garments with a cleaned background get the darker tone */
+  try{
+    var changed=false;
+    for(var q=0;q<S.items.length;q++){
+      var it=S.items[q];
+      if(it.bgMode!=='krem'||!it.imgOrig||it.bgTone)continue;
+      var tn=effTone(it.color,it.tonePick);
+      it.bgTone=tn;
+      if(tn==='mork'){
+        var r=await composeImage(it.imgOrig,{cream:true,tone:'mork',tol:it.tol||28,holes:it.bgHoles!==false,seeds:it.bgSeeds||[],strokes:it.strokes||[]});
+        if(r.status==='ok'||r.status==='toomuch')it.img=r.url;else it.bgTone='krem';
+      }
+      await save('items',it);changed=true;
+    }
+    if(changed&&!S.sheet)render();
+  }catch(e){}
 })();
 })();
 </script>
